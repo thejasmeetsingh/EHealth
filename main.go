@@ -7,22 +7,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
 	// Load env varriables
 	godotenv.Load()
 
-	mode := os.Getenv("GIN_MODE")
-
-	if mode == "" || mode == "release" {
-		gin.SetMode(gin.ReleaseMode)
-	} else {
-		gin.SetMode(gin.DebugMode)
-	}
-
-	r := gin.Default()
-	r.GET("/health-check/", func(c *gin.Context) {
+	router := getRouter()
+	router.GET("/health-check/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Up and Running!",
 		})
@@ -33,5 +27,5 @@ func main() {
 		log.Fatal("PORT is not configured in the enviorment")
 	}
 
-	r.Run(":" + port)
+	router.Run(":" + port)
 }

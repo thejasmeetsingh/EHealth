@@ -4,7 +4,7 @@ services:
     build: .
     container_name: db
     restart: always
-    image: postgres:16.0-alpine3.18
+    image: postgis/postgis
     volumes:
       - postgres-db:/var/lib/postgresql/data
     environment:
@@ -20,7 +20,7 @@ services:
   go-server:
     build: .
     container_name: go_server
-    command: sh -c "go install && EHealth"
+    command: sh -c "./goose.sh up && go install && EHealth"
     volumes:
       - .:/code
     ports:
