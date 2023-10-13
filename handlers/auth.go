@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/thejasmeetsingh/EHealth/internal/database"
 	"github.com/thejasmeetsingh/EHealth/utils"
+	"github.com/thejasmeetsingh/EHealth/validators"
 )
 
 func (apiCfg *ApiCfg) Singup(c *gin.Context) {
@@ -22,6 +23,19 @@ func (apiCfg *ApiCfg) Singup(c *gin.Context) {
 	err := c.ShouldBindJSON(&params)
 
 	if err != nil {
+		errorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while parsing the request; %v", err.Error()))
+		return
+	}
+
+	err = validators.PasswordValidator(params.Password, params.Email)
+	if err != nil {
+		errorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while parsing the request; %v", err))
+		return
+	}
+
+	hashedPassword, err := utils.GetHashedPassword(params.Password)
+
+	if err != nil {
 		errorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while parsing the request; %v", err))
 		return
 	}
@@ -31,7 +45,7 @@ func (apiCfg *ApiCfg) Singup(c *gin.Context) {
 		CreatedAt:  time.Now().UTC(),
 		ModifiedAt: time.Now().UTC(),
 		Email:      params.Email,
-		Password:   params.Password,
+		Password:   hashedPassword,
 		IsEndUser:  params.IsEndUser,
 	})
 
