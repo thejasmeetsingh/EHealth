@@ -26,6 +26,7 @@ func getRouter() *gin.Engine {
 
 	v1 := router.Group("/v1")
 	v1.POST("/signup/", apiCfg.Singup)
+	v1.POST("/login/", apiCfg.Login)
 
 	return router
 }
