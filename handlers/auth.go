@@ -24,20 +24,20 @@ func (apiCfg *ApiCfg) Singup(c *gin.Context) {
 	err := c.ShouldBindJSON(&params)
 
 	if err != nil {
-		errorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while parsing the request; %v", err.Error()))
+		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while parsing the request; %v", err.Error()))
 		return
 	}
 
 	err = validators.PasswordValidator(params.Password, params.Email)
 	if err != nil {
-		errorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while parsing the request; %v", err))
+		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while parsing the request; %v", err))
 		return
 	}
 
 	hashedPassword, err := utils.GetHashedPassword(params.Password)
 
 	if err != nil {
-		errorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while parsing the request; %v", err))
+		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while parsing the request; %v", err))
 		return
 	}
 
@@ -51,18 +51,18 @@ func (apiCfg *ApiCfg) Singup(c *gin.Context) {
 	})
 
 	if err != nil {
-		errorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while creating a user: %v", err))
+		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while creating a user: %v", err))
 		return
 	}
 
 	tokens, err := utils.GenerateTokens(user.ID)
 
 	if err != nil {
-		errorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while generating tokens: %v", err))
+		ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while generating tokens: %v", err))
 		return
 	}
 
-	successResponse(c, http.StatusCreated, "Account created successfully!", tokens)
+	SuccessResponse(c, http.StatusCreated, "Account created successfully!", tokens)
 }
 
 func (apiCfg *ApiCfg) Login(c *gin.Context) {
@@ -75,31 +75,31 @@ func (apiCfg *ApiCfg) Login(c *gin.Context) {
 	err := c.ShouldBindJSON(&params)
 
 	if err != nil {
-		errorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while parsing the request; %v", err.Error()))
+		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while parsing the request; %v", err.Error()))
 		return
 	}
 
 	user, err := apiCfg.DB.GetUserByEmail(c, strings.ToLower(params.Email))
 	if err != nil {
-		errorResponse(c, http.StatusBadRequest, "User does not exists, Please check your credentials")
+		ErrorResponse(c, http.StatusBadRequest, "User does not exists, Please check your credentials")
 		return
 	}
 
 	match, err := utils.CheckPassowrdValid(params.Password, user.Password)
 	if err != nil {
-		errorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error caught while validating password: %v", err))
+		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error caught while validating password: %v", err))
 		return
 	} else if !match {
-		errorResponse(c, http.StatusForbidden, "Invalid Credentials")
+		ErrorResponse(c, http.StatusForbidden, "Invalid Credentials")
 		return
 	}
 
 	tokens, err := utils.GenerateTokens(user.ID)
 
 	if err != nil {
-		errorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while generating tokens: %v", err))
+		ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while generating tokens: %v", err))
 		return
 	}
 
-	successResponse(c, http.StatusCreated, "Logged in Successfully!", tokens)
+	SuccessResponse(c, http.StatusCreated, "Logged in Successfully!", tokens)
 }
