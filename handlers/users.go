@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/thejasmeetsingh/EHealth/internal/database"
@@ -45,7 +46,7 @@ func (apiCfg *ApiCfg) UpdateUserProfile(c *gin.Context, dbUser database.User) {
 			String: params.Name,
 			Valid:  true,
 		},
-		Email: params.Email,
+		Email: strings.ToLower(params.Email),
 		ID:    dbUser.ID,
 	})
 
