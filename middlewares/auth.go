@@ -7,10 +7,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/thejasmeetsingh/EHealth/handlers"
+	"github.com/thejasmeetsingh/EHealth/internal/database"
 	"github.com/thejasmeetsingh/EHealth/utils"
 )
 
-func JWTAuth(apiCfg handlers.ApiCfg) gin.HandlerFunc {
+type authHandler func(*gin.Context, database.User)
+
+func JWTAuth(apiCfg handlers.ApiCfg, handler authHandler) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		headerAuthToken := ctx.GetHeader("Authorization")
 
@@ -42,12 +45,6 @@ func JWTAuth(apiCfg handlers.ApiCfg) gin.HandlerFunc {
 			return
 		}
 
-		ctx.Set("user", map[string]any{
-			"id":          dbUser.ID,
-			"email":       dbUser.Email,
-			"name":        dbUser.Name.String,
-			"is_end_user": dbUser.IsEndUser,
-		})
-		ctx.Next()
+		handler(ctx, dbUser)
 	}
 }

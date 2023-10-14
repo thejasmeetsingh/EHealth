@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/thejasmeetsingh/EHealth/config"
 	"github.com/thejasmeetsingh/EHealth/handlers"
+	"github.com/thejasmeetsingh/EHealth/middlewares"
 )
 
 func getRouter() *gin.Engine {
@@ -27,6 +28,8 @@ func getRouter() *gin.Engine {
 	v1 := router.Group("/v1")
 	v1.POST("/signup/", apiCfg.Singup)
 	v1.POST("/login/", apiCfg.Login)
-
+	v1.GET("/profile/", middlewares.JWTAuth(apiCfg, apiCfg.GetUserProfile))
+	v1.PATCH("/profile/", middlewares.JWTAuth(apiCfg, apiCfg.UpdateUserProfile))
+	v1.DELETE("/profile/", middlewares.JWTAuth(apiCfg, apiCfg.DeleteUserProfile))
 	return router
 }
