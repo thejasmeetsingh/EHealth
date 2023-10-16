@@ -30,7 +30,7 @@ func (apiCfg *ApiCfg) Singup(c *gin.Context) {
 
 	err = validators.PasswordValidator(params.Password, params.Email)
 	if err != nil {
-		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while parsing the request; %v", err))
+		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Invalid password format; %v", err))
 		return
 	}
 
