@@ -123,3 +123,29 @@ func (q *Queries) UpdateUserDetails(ctx context.Context, arg UpdateUserDetailsPa
 	)
 	return i, err
 }
+
+const updateUserPassword = `-- name: UpdateUserPassword :one
+UPDATE users SET password=$1
+WHERE id=$2
+RETURNING id, created_at, modified_at, email, password, name, is_end_user
+`
+
+type UpdateUserPasswordParams struct {
+	Password string
+	ID       uuid.UUID
+}
+
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateUserPassword, arg.Password, arg.ID)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.ModifiedAt,
+		&i.Email,
+		&i.Password,
+		&i.Name,
+		&i.IsEndUser,
+	)
+	return i, err
+}
