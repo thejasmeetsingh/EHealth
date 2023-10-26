@@ -7,6 +7,8 @@ There is also a calendar management system where users can see the available slo
 - Install [docker](https://www.docker.com/products/docker-desktop/)
 - Create a file named as `.env` in the project root path and add below varriables
     ```
+    SECRET_KEY=
+
     PORT=
 
     DB_USER=
@@ -16,12 +18,22 @@ There is also a calendar management system where users can see the available slo
 
     GIN_MODE=
     CGO_ENABLED=
+
+    FROM_EMAIL=
+    SMTP_SERVER=
+    SMTP_PORT=
+    SMTP_USERNAME=
+    SMTP_PASSWORD=
+    DEFAULT_RECIPIENT_EMAIL=
+
+    ACCESS_TOKEN_EXP=
+    REFRESH_TOKEN_EXP=
     ```
     You can set the respected values as per your need
 - And finally run `docker-compose up` and that's it!
 
 ## TODO
-- [ ] User management
+- [x] User management
 - [ ] Booking management.
 - [ ] Implement Auth system, JWT specifically.
 - [ ] Google/Outlook calendar integration using OAuth.
