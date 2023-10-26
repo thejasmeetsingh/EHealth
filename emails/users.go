@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/thejasmeetsingh/EHealth/utils"
 )
@@ -25,10 +26,18 @@ func ResetPassword(email string, request http.Request) (bool, error) {
 		protocol += "s"
 	}
 
+	signedToken, err := utils.GetToken(time.Now().Add(time.Hour*1), email)
+	if err != nil {
+		return false, err
+	}
+
 	htmlContent = utils.ReplacePlaceholders(htmlContent, map[string]string{
-		"{{link}}": fmt.Sprintf("%s://%s", protocol, request.Host),
+		"{{link}}": fmt.Sprintf("%s://%s/%s/%s/", protocol, request.Host, "reset-password", signedToken),
 	})
 
-	go Send([]string{email}, "Reset Password", string(htmlContent))
+	// This default email is added for development purposes only
+	defaultRecipientEmail := os.Getenv("DEFAULT_RECIPIENT_EMAIL")
+
+	go Send([]string{defaultRecipientEmail}, "Reset Password", string(htmlContent))
 	return true, nil
 }

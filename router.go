@@ -25,6 +25,10 @@ func getRouter() *gin.Engine {
 
 	router := gin.Default()
 
+	router.LoadHTMLGlob("templates/*.html")
+	router.GET("/reset-password/:token/", apiCfg.RenderResetPassword)
+	router.POST("/validate-password/", apiCfg.ValidateResetPassword)
+
 	v1 := router.Group("/v1")
 	v1.POST("/signup/", apiCfg.Singup)
 	v1.POST("/login/", apiCfg.Login)
