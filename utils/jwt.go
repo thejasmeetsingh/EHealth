@@ -7,11 +7,10 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 )
 
 type Claims struct {
-	UserID uuid.UUID `json:"user_id"`
+	Data string `json:"data"`
 	jwt.RegisteredClaims
 }
 
@@ -46,19 +45,19 @@ func getTokenExpiration() (time.Duration, time.Duration) {
 	return time.Hour * 24 * time.Duration(accessTokenExpiration), time.Hour * 24 * time.Duration(refreshTokenExpiration)
 }
 
-func GenerateTokens(userID uuid.UUID) (Tokens, error) {
+func GenerateTokens(userID string) (Tokens, error) {
 	accessTokenExp, refreshTokenExp := getTokenExpiration()
 	secretkey := getSecretKey()
 
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, &Claims{
-		UserID: userID,
+		Data: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(accessTokenExp)),
 		},
 	})
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, &Claims{
-		UserID: userID,
+		Data: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(refreshTokenExp)),
 		},
@@ -82,7 +81,7 @@ func GenerateTokens(userID uuid.UUID) (Tokens, error) {
 	}, nil
 }
 
-func VerifyAccessToken(tokenString string) (*Claims, error) {
+func VerifyToken(tokenString string) (*Claims, error) {
 	secretKey := getSecretKey()
 
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
@@ -101,13 +100,13 @@ func VerifyAccessToken(tokenString string) (*Claims, error) {
 }
 
 func ReIssueAccessToken(refreshToken string) (Tokens, error) {
-	claims, err := VerifyAccessToken(refreshToken)
+	claims, err := VerifyToken(refreshToken)
 	if err != nil {
 		return Tokens{}, err
 	}
 
 	if time.Unix(claims.ExpiresAt.Unix(), 0).After(time.Now()) {
-		return GenerateTokens(claims.UserID)
+		return GenerateTokens(claims.Data)
 	}
 
 	return Tokens{}, fmt.Errorf("refresh token has expired")
