@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/thejasmeetsingh/EHealth/emails"
@@ -169,7 +170,7 @@ func (apiCfg *ApiCfg) ValidateResetPassword(c *gin.Context) {
 		c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{
 			"token":   token,
 			"isValid": false,
-			"message": "Invalid Link or Link is expired",
+			"message": "Invalid Link",
 		})
 		return
 	}
@@ -188,11 +189,20 @@ func (apiCfg *ApiCfg) ValidateResetPassword(c *gin.Context) {
 		c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{
 			"token":   token,
 			"isValid": false,
-			"message": "Invalid Link or Link is expired",
+			"message": "Invalid Link",
 		})
 		return
 	}
-	fmt.Println(claims.Data)
+
+	if !time.Unix(claims.ExpiresAt.Unix(), 0).After(time.Now()) {
+		c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{
+			"token":   token,
+			"isValid": false,
+			"message": "Link is expired",
+		})
+		return
+	}
+
 	err = validators.PasswordValidator(confirmPassword, claims.Data)
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{

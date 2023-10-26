@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -35,6 +36,12 @@ func JWTAuth(apiCfg handlers.ApiCfg, handler authHandler) gin.HandlerFunc {
 		claims, err := utils.VerifyToken(authToken[1])
 		if err != nil {
 			handlers.ErrorResponse(ctx, http.StatusForbidden, fmt.Sprintf("Error caught while verifying the token: %v", err))
+			ctx.Abort()
+			return
+		}
+
+		if !time.Unix(claims.ExpiresAt.Unix(), 0).After(time.Now()) {
+			handlers.ErrorResponse(ctx, http.StatusForbidden, "Invalid authentication token")
 			ctx.Abort()
 			return
 		}
