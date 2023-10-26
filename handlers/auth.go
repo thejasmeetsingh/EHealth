@@ -55,7 +55,7 @@ func (apiCfg *ApiCfg) Singup(c *gin.Context) {
 		return
 	}
 
-	tokens, err := utils.GenerateTokens(user.ID)
+	tokens, err := utils.GenerateTokens(user.ID.String())
 
 	if err != nil {
 		ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while generating tokens: %v", err))
@@ -94,7 +94,7 @@ func (apiCfg *ApiCfg) Login(c *gin.Context) {
 		return
 	}
 
-	tokens, err := utils.GenerateTokens(user.ID)
+	tokens, err := utils.GenerateTokens(user.ID.String())
 
 	if err != nil {
 		ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while generating tokens: %v", err))

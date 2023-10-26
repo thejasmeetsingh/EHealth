@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -139,19 +138,108 @@ func (apiCfg *ApiCfg) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	if _, err := apiCfg.DB.GetUserByEmail(c, strings.ToLower(params.Email)); err != nil {
+	dbUser, err := apiCfg.DB.GetUserByEmail(c, strings.ToLower(params.Email))
+	if err != nil {
 		ErrorResponse(c, http.StatusForbidden, "Email does not exists")
 		return
 	}
 
-	// This default email is added for development purposes only
-	defaultRecipientEmail := os.Getenv("DEFAULT_RECIPIENT_EMAIL")
-
-	_, err := emails.ResetPassword(defaultRecipientEmail, *c.Request)
+	_, err = emails.ResetPassword(dbUser.Email, *c.Request)
 	if err != nil {
 		ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while sending email: %v", err))
 		return
 	}
 
 	SuccessResponse(c, http.StatusOK, "Reset password email sent successfully", nil)
+}
+
+func (apiCfg *ApiCfg) RenderResetPassword(c *gin.Context) {
+	c.HTML(http.StatusOK, "reset_password.html", gin.H{
+		"token":   c.Param("token"),
+		"isValid": false,
+	})
+}
+
+func (apiCfg *ApiCfg) ValidateResetPassword(c *gin.Context) {
+	password := c.PostForm("password")
+	confirmPassword := c.PostForm("confirm-password")
+	token := c.PostForm("token")
+
+	if token == "" {
+		c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{
+			"token":   token,
+			"isValid": false,
+			"message": "Invalid Link or Link is expired",
+		})
+		return
+	}
+
+	if password != confirmPassword {
+		c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{
+			"token":   token,
+			"isValid": false,
+			"message": "Password do not match with Confirm Password",
+		})
+		return
+	}
+
+	claims, err := utils.VerifyToken(token)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{
+			"token":   token,
+			"isValid": false,
+			"message": "Invalid Link or Link is expired",
+		})
+		return
+	}
+	fmt.Println(claims.Data)
+	err = validators.PasswordValidator(confirmPassword, claims.Data)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{
+			"token":   token,
+			"isValid": false,
+			"message": err,
+		})
+		return
+	}
+
+	dbUser, err := apiCfg.DB.GetUserByEmail(c, claims.Data)
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{
+			"token":   token,
+			"isValid": false,
+			"message": err,
+		})
+		return
+	}
+
+	hashedPassword, err := utils.GetHashedPassword(confirmPassword)
+
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{
+			"token":   token,
+			"isValid": false,
+			"message": "Invalid Password",
+		})
+		return
+	}
+
+	_, err = apiCfg.DB.UpdateUserPassword(c, database.UpdateUserPasswordParams{
+		Password: hashedPassword,
+		ID:       dbUser.ID,
+	})
+
+	if err != nil {
+		c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{
+			"token":   token,
+			"isValid": false,
+			"message": "Cannot update the password",
+		})
+		return
+	}
+
+	c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{
+		"isValid": true,
+		"message": "Password updated successfully!",
+	})
 }
