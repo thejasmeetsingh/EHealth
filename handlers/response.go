@@ -1,3 +1,5 @@
+// A base response functions for sending success or error response based on the requirement
+
 package handlers
 
 import (

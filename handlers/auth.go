@@ -13,6 +13,7 @@ import (
 	"github.com/thejasmeetsingh/EHealth/validators"
 )
 
+// SignUp API
 func (apiCfg *ApiCfg) Singup(c *gin.Context) {
 	type Parameters struct {
 		Email     string `json:"email" binding:"required,email"`
@@ -28,12 +29,14 @@ func (apiCfg *ApiCfg) Singup(c *gin.Context) {
 		return
 	}
 
+	// Validate Password
 	err = validators.PasswordValidator(params.Password, params.Email)
 	if err != nil {
 		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Invalid password format; %v", err))
 		return
 	}
 
+	// Generate hashed password
 	hashedPassword, err := utils.GetHashedPassword(params.Password)
 
 	if err != nil {
@@ -41,6 +44,7 @@ func (apiCfg *ApiCfg) Singup(c *gin.Context) {
 		return
 	}
 
+	// Create user account
 	user, err := apiCfg.DB.CreateUser(c, database.CreateUserParams{
 		ID:         uuid.New(),
 		CreatedAt:  time.Now().UTC(),
@@ -55,6 +59,7 @@ func (apiCfg *ApiCfg) Singup(c *gin.Context) {
 		return
 	}
 
+	// Generate auth tokens for the user
 	tokens, err := utils.GenerateTokens(user.ID.String())
 
 	if err != nil {
@@ -65,6 +70,7 @@ func (apiCfg *ApiCfg) Singup(c *gin.Context) {
 	SuccessResponse(c, http.StatusCreated, "Account created successfully!", tokens)
 }
 
+// Login API
 func (apiCfg *ApiCfg) Login(c *gin.Context) {
 	type Parameters struct {
 		Email    string `json:"email" binding:"required,email"`
@@ -79,12 +85,14 @@ func (apiCfg *ApiCfg) Login(c *gin.Context) {
 		return
 	}
 
+	// Check wheather the user exists with the given email or not
 	user, err := apiCfg.DB.GetUserByEmail(c, strings.ToLower(params.Email))
 	if err != nil {
 		ErrorResponse(c, http.StatusBadRequest, "User does not exists, Please check your credentials")
 		return
 	}
 
+	// Check the given password with hashed password stored in DB
 	match, err := utils.CheckPassowrdValid(params.Password, user.Password)
 	if err != nil {
 		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error caught while validating password: %v", err))
@@ -94,6 +102,7 @@ func (apiCfg *ApiCfg) Login(c *gin.Context) {
 		return
 	}
 
+	// Generate auth tokens for the user
 	tokens, err := utils.GenerateTokens(user.ID.String())
 
 	if err != nil {
