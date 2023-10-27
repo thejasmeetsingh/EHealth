@@ -112,3 +112,28 @@ func (apiCfg *ApiCfg) Login(c *gin.Context) {
 
 	SuccessResponse(c, http.StatusCreated, "Logged in Successfully!", tokens)
 }
+
+// Refresh Token API
+//
+// Generate new tokens if the given refresh token is valid
+func (apiCfg *ApiCfg) RefreshAccessToken(c *gin.Context) {
+	type Parameters struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+
+	var params Parameters
+	err := c.ShouldBindJSON(&params)
+
+	if err != nil {
+		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while parsing the request: %v", err))
+		return
+	}
+
+	tokens, err := utils.ReIssueAccessToken(params.RefreshToken)
+	if err != nil {
+		ErrorResponse(c, http.StatusForbidden, fmt.Sprintf("Error while issueing new tokens: %v", err))
+		return
+	}
+
+	SuccessResponse(c, http.StatusOK, "Tokens re-issued Successfully!", tokens)
+}

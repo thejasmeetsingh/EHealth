@@ -45,6 +45,7 @@ func getRouter() *gin.Engine {
 	v1.DELETE("/profile/", middlewares.JWTAuth(apiCfg, apiCfg.DeleteUserProfile))
 	v1.PUT("/change-password/", middlewares.JWTAuth(apiCfg, apiCfg.ChangePassword))
 	v1.POST("/reset-password/", apiCfg.ResetPassword)
+	v1.POST("/refresh-token/", apiCfg.RefreshAccessToken)
 
 	return router
 }
