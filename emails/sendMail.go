@@ -8,6 +8,7 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
+// Send email to given recipients via SMTP. This function should be called as a go routine so that email processing happens in the background
 func Send(recipients []string, subject string, body string) {
 	message := gomail.NewMessage()
 

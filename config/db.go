@@ -8,6 +8,7 @@ import (
 	"github.com/thejasmeetsingh/EHealth/internal/database"
 )
 
+// Create and return a new DB connection
 func GetDBConn() *database.Queries {
 	dbURL := os.Getenv("DB_URL")
 

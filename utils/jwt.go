@@ -1,3 +1,5 @@
+// Contain all the common JWT token related functions
+
 package utils
 
 import (
@@ -28,6 +30,7 @@ func getSecretKey() []byte {
 	return []byte(secretKey)
 }
 
+// Return the access token and refresh token expiry duration
 func getTokenExpiration() (time.Duration, time.Duration) {
 	accessTokenExp := os.Getenv("ACCESS_TOKEN_EXP")
 	refreshTokenExp := os.Getenv("REFRESH_TOKEN_EXP")
@@ -45,6 +48,7 @@ func getTokenExpiration() (time.Duration, time.Duration) {
 	return time.Hour * 24 * time.Duration(accessTokenExpiration), time.Hour * 24 * time.Duration(refreshTokenExpiration)
 }
 
+// Generate the access and refresh tokens and encode the given userID string
 func GenerateTokens(userID string) (Tokens, error) {
 	accessTokenExp, refreshTokenExp := getTokenExpiration()
 	secretkey := getSecretKey()
@@ -81,6 +85,7 @@ func GenerateTokens(userID string) (Tokens, error) {
 	}, nil
 }
 
+// Verify the given token string is valid or not and return the respected token claim which contains the encoded data
 func VerifyToken(tokenString string) (*Claims, error) {
 	secretKey := getSecretKey()
 
@@ -99,6 +104,9 @@ func VerifyToken(tokenString string) (*Claims, error) {
 	return nil, fmt.Errorf("invalid token string")
 }
 
+// Generate new access and refresh tokens
+//
+// This will help where access token is expired and user uses refresh token to generate a new access token
 func ReIssueAccessToken(refreshToken string) (Tokens, error) {
 	claims, err := VerifyToken(refreshToken)
 	if err != nil {

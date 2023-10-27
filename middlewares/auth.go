@@ -15,6 +15,9 @@ import (
 
 type authHandler func(*gin.Context, database.User)
 
+// Validate the request by checking wheather or not they have the valid JWT access token or not
+//
+// Token format: Bearer <TOKEN>
 func JWTAuth(apiCfg handlers.ApiCfg, handler authHandler) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		headerAuthToken := ctx.GetHeader("Authorization")
@@ -25,14 +28,17 @@ func JWTAuth(apiCfg handlers.ApiCfg, handler authHandler) gin.HandlerFunc {
 			return
 		}
 
+		// Split the token string
 		authToken := strings.Split(headerAuthToken, " ")
 
+		// Validate the token string
 		if len(authToken) != 2 || authToken[0] != "Bearer" {
 			handlers.ErrorResponse(ctx, http.StatusForbidden, "Invalid authentication format")
 			ctx.Abort()
 			return
 		}
 
+		// Verify the token and get the encoded payload which is the userID string
 		claims, err := utils.VerifyToken(authToken[1])
 		if err != nil {
 			handlers.ErrorResponse(ctx, http.StatusForbidden, fmt.Sprintf("Error caught while verifying the token: %v", err))
@@ -40,12 +46,14 @@ func JWTAuth(apiCfg handlers.ApiCfg, handler authHandler) gin.HandlerFunc {
 			return
 		}
 
+		// Check the validity of the token
 		if !time.Unix(claims.ExpiresAt.Unix(), 0).After(time.Now()) {
 			handlers.ErrorResponse(ctx, http.StatusForbidden, "Invalid authentication token")
 			ctx.Abort()
 			return
 		}
 
+		// Conver the userID string to UUID
 		userID, err := uuid.Parse(claims.Data)
 		if err != nil {
 			handlers.ErrorResponse(ctx, http.StatusForbidden, "Invalid authentication token")
@@ -53,6 +61,7 @@ func JWTAuth(apiCfg handlers.ApiCfg, handler authHandler) gin.HandlerFunc {
 			return
 		}
 
+		// Fetch the user by the ID
 		dbUser, err := apiCfg.DB.GetUserById(ctx, userID)
 		if err != nil {
 			handlers.ErrorResponse(ctx, http.StatusForbidden, "Invalid authentication token")
@@ -60,6 +69,7 @@ func JWTAuth(apiCfg handlers.ApiCfg, handler authHandler) gin.HandlerFunc {
 			return
 		}
 
+		// Further call the given handler and send the user instance as well
 		handler(ctx, dbUser)
 	}
 }

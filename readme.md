@@ -31,6 +31,7 @@ There is also a calendar management system where users can see the available slo
     ```
     You can set the respected values as per your need
 - And finally run `docker-compose up` and that's it!
+- You can use this Postman Collection for using/testing the APIs: [Link](https://api.postman.com/collections/17396704-2cebc0d3-fcb4-4475-94b6-d2a59361463d?access_key=PMAT-01HDNGX7D80B3B81107SB6H9MZ)
 
 ## TODO
 - [x] User management

@@ -23,6 +23,7 @@ func containsSpecialChar(s string) bool {
 	return re.MatchString(s)
 }
 
+// Perform basic validation checks on the given password string
 func PasswordValidator(password string, email string) error {
 	if strings.Contains(password, " ") {
 		return fmt.Errorf("password should not contain empty spaces")

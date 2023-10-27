@@ -1,3 +1,7 @@
+// Custom user model for converting the raw data into a desired JSON data
+//
+// With keys as formatted as snake_case rather than TitleCase
+
 package models
 
 import (

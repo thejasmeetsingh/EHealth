@@ -15,7 +15,10 @@ func main() {
 	// Load env varriables
 	godotenv.Load()
 
+	// Get the rounter
 	router := getRouter()
+
+	// Added health check endpoint which can be called to ensure that server is up and running
 	router.GET("/health-check/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Up and Running!",
@@ -27,5 +30,6 @@ func main() {
 		log.Fatal("PORT is not configured in the enviorment")
 	}
 
+	// Run the server on the given port
 	router.Run(":" + port)
 }

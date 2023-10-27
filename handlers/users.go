@@ -15,10 +15,12 @@ import (
 	"github.com/thejasmeetsingh/EHealth/validators"
 )
 
+// Fetch user profile details
 func (apiCfg *ApiCfg) GetUserProfile(c *gin.Context, dbUser database.User) {
 	SuccessResponse(c, http.StatusOK, "", models.DatabaseUserToUser(dbUser))
 }
 
+// Update user profile details
 func (apiCfg *ApiCfg) UpdateUserProfile(c *gin.Context, dbUser database.User) {
 	type Parameters struct {
 		Email string `json:"email"`
@@ -39,11 +41,13 @@ func (apiCfg *ApiCfg) UpdateUserProfile(c *gin.Context, dbUser database.User) {
 		params.Email = dbUser.Email
 	}
 
+	// Validate the given email address
 	if !validators.EmailValidator(params.Email) {
 		ErrorResponse(c, http.StatusBadRequest, "Invalid email address")
 		return
 	}
 
+	// Update the profile details
 	user, err := apiCfg.DB.UpdateUserDetails(c, database.UpdateUserDetailsParams{
 		Name: sql.NullString{
 			String: params.Name,
@@ -61,6 +65,7 @@ func (apiCfg *ApiCfg) UpdateUserProfile(c *gin.Context, dbUser database.User) {
 	SuccessResponse(c, http.StatusOK, "", models.DatabaseUserToUser(user))
 }
 
+// Delete user profile
 func (apiCfg *ApiCfg) DeleteUserProfile(c *gin.Context, dbUser database.User) {
 	if err := apiCfg.DB.DeleteUser(c, dbUser.ID); err != nil {
 		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error caught while deleting user profile: %v", err))
@@ -70,6 +75,7 @@ func (apiCfg *ApiCfg) DeleteUserProfile(c *gin.Context, dbUser database.User) {
 	SuccessResponse(c, http.StatusOK, "Profile deleted successfully!", nil)
 }
 
+// Change password API for authenticated user
 func (apiCfg *ApiCfg) ChangePassword(c *gin.Context, dbUser database.User) {
 	type Parameters struct {
 		CurrentPassword    string `json:"current_password"`
@@ -83,6 +89,7 @@ func (apiCfg *ApiCfg) ChangePassword(c *gin.Context, dbUser database.User) {
 		return
 	}
 
+	// Check wheather or not current password is correct or not
 	match, err := utils.CheckPassowrdValid(params.CurrentPassword, dbUser.Password)
 	if err != nil {
 		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error caught while validating password: %v", err))
@@ -92,6 +99,7 @@ func (apiCfg *ApiCfg) ChangePassword(c *gin.Context, dbUser database.User) {
 		return
 	}
 
+	// Validate the new password
 	if params.NewPassword != params.NewPasswordConfirm {
 		fmt.Println(params.NewPassword, params.NewPasswordConfirm)
 		ErrorResponse(c, http.StatusBadRequest, "New password does not match with new password confirm")
@@ -108,6 +116,7 @@ func (apiCfg *ApiCfg) ChangePassword(c *gin.Context, dbUser database.User) {
 		return
 	}
 
+	// Generate the new hashed password
 	hashedPassword, err := utils.GetHashedPassword(params.NewPasswordConfirm)
 
 	if err != nil {
@@ -115,6 +124,7 @@ func (apiCfg *ApiCfg) ChangePassword(c *gin.Context, dbUser database.User) {
 		return
 	}
 
+	// Update the password
 	_, err = apiCfg.DB.UpdateUserPassword(c, database.UpdateUserPasswordParams{
 		Password: hashedPassword,
 		ID:       dbUser.ID,
@@ -128,6 +138,7 @@ func (apiCfg *ApiCfg) ChangePassword(c *gin.Context, dbUser database.User) {
 	SuccessResponse(c, http.StatusOK, "Password changed successfully!", nil)
 }
 
+// Reset password API for users who forgot their password
 func (apiCfg *ApiCfg) ResetPassword(c *gin.Context) {
 	type Parameters struct {
 		Email string `json:"email" binding:"required,email"`
@@ -139,12 +150,14 @@ func (apiCfg *ApiCfg) ResetPassword(c *gin.Context) {
 		return
 	}
 
+	// Fetch the user with the given email address
 	dbUser, err := apiCfg.DB.GetUserByEmail(c, strings.ToLower(params.Email))
 	if err != nil {
 		ErrorResponse(c, http.StatusForbidden, "Email does not exists")
 		return
 	}
 
+	// Send reset password email
 	_, err = emails.ResetPassword(dbUser.Email, *c.Request)
 	if err != nil {
 		ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while sending email: %v", err))
@@ -154,6 +167,7 @@ func (apiCfg *ApiCfg) ResetPassword(c *gin.Context) {
 	SuccessResponse(c, http.StatusOK, "Reset password email sent successfully", nil)
 }
 
+// Render the reset password form
 func (apiCfg *ApiCfg) RenderResetPassword(c *gin.Context) {
 	c.HTML(http.StatusOK, "reset_password.html", gin.H{
 		"token":   c.Param("token"),
@@ -161,6 +175,7 @@ func (apiCfg *ApiCfg) RenderResetPassword(c *gin.Context) {
 	})
 }
 
+// Validate the new password coming from the reset password form
 func (apiCfg *ApiCfg) ValidateResetPassword(c *gin.Context) {
 	password := c.PostForm("password")
 	confirmPassword := c.PostForm("confirm-password")
@@ -184,6 +199,7 @@ func (apiCfg *ApiCfg) ValidateResetPassword(c *gin.Context) {
 		return
 	}
 
+	// Verify the reset password token and get encoded token data
 	claims, err := utils.VerifyToken(token)
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{
@@ -194,6 +210,7 @@ func (apiCfg *ApiCfg) ValidateResetPassword(c *gin.Context) {
 		return
 	}
 
+	// Check the validity of the token
 	if !time.Unix(claims.ExpiresAt.Unix(), 0).After(time.Now()) {
 		c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{
 			"token":   token,
@@ -203,6 +220,7 @@ func (apiCfg *ApiCfg) ValidateResetPassword(c *gin.Context) {
 		return
 	}
 
+	// Validate the new password
 	err = validators.PasswordValidator(confirmPassword, claims.Data)
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{
@@ -213,6 +231,7 @@ func (apiCfg *ApiCfg) ValidateResetPassword(c *gin.Context) {
 		return
 	}
 
+	// Fetch user by the email which was encoded in the token
 	dbUser, err := apiCfg.DB.GetUserByEmail(c, claims.Data)
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "reset_password.html", gin.H{
@@ -223,6 +242,7 @@ func (apiCfg *ApiCfg) ValidateResetPassword(c *gin.Context) {
 		return
 	}
 
+	// Generate the new hashed password
 	hashedPassword, err := utils.GetHashedPassword(confirmPassword)
 
 	if err != nil {
@@ -234,6 +254,7 @@ func (apiCfg *ApiCfg) ValidateResetPassword(c *gin.Context) {
 		return
 	}
 
+	// Update the password of the user
 	_, err = apiCfg.DB.UpdateUserPassword(c, database.UpdateUserPasswordParams{
 		Password: hashedPassword,
 		ID:       dbUser.ID,
