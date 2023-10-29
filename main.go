@@ -7,8 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-
-	_ "github.com/lib/pq"
+	"github.com/thejasmeetsingh/EHealth/config"
 )
 
 func main() {
@@ -16,7 +15,7 @@ func main() {
 	godotenv.Load()
 
 	// Get the rounter
-	router := getRouter()
+	router := config.GetRouter(false)
 
 	// Added health check endpoint which can be called to ensure that server is up and running
 	router.GET("/health-check/", func(c *gin.Context) {
