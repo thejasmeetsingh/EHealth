@@ -1,16 +1,15 @@
-package main
+package config
 
 import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/thejasmeetsingh/EHealth/config"
 	"github.com/thejasmeetsingh/EHealth/handlers"
 	"github.com/thejasmeetsingh/EHealth/middlewares"
 )
 
 // Create and return a router instance
-func getRouter() *gin.Engine {
+func GetRouter(isTest bool) *gin.Engine {
 	// Check the application mode
 	mode := os.Getenv("GIN_MODE")
 
@@ -21,7 +20,7 @@ func getRouter() *gin.Engine {
 	}
 
 	// Get the DB connection instance
-	dbConn := config.GetDBConn()
+	dbConn := getDBConn(isTest)
 	apiCfg := handlers.ApiCfg{
 		DB: dbConn,
 	}
@@ -29,8 +28,14 @@ func getRouter() *gin.Engine {
 	// Create a default router with default logging and recovery middleware
 	router := gin.Default()
 
+	htmlTemplatePath := "templates/*.html"
+
+	if isTest {
+		htmlTemplatePath = "../" + htmlTemplatePath
+	}
+
 	// Set the default templates path and endpoints
-	router.LoadHTMLGlob("templates/*.html")
+	router.LoadHTMLGlob(htmlTemplatePath)
 	router.GET("/reset-password/:token/", apiCfg.RenderResetPassword)
 	router.POST("/validate-password/", apiCfg.ValidateResetPassword)
 

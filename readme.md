@@ -36,7 +36,7 @@ There is also a calendar management system where users can see the available slo
 ## TODO
 - [x] User management
 - [ ] Booking management.
-- [ ] Implement Auth system, JWT specifically.
+- [x] Implement Auth system, JWT specifically.
 - [ ] Google/Outlook calendar integration using OAuth.
 - [ ] Implement geolocation so that users can view doctors that are nearest to them.
-- [ ] Integrate an email service for sending booking-related notifications.
+- [x] Integrate an email service for sending booking-related notifications.
