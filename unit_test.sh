@@ -28,8 +28,3 @@ goose -dir sql/schema postgres postgres://test_db_user:1234@localhost:5432/eheal
 
 # Run test case
 go test ./tests/
-
-# Remove un-nessecary resources
-docker container rm test_db -f
-docker image prune -a -f
-docker volume prune -f
