@@ -13,7 +13,7 @@ docker run --name test_db \
 echo "Waiting for DB..."
 
 while true; do
-    # Use Docker commands to check the health of the database container
+    # Check the health of the database container
     if docker inspect --format '{{json .State.Health.Status}}' test_db | grep -q "healthy"
     then
         break
