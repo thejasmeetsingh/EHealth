@@ -28,6 +28,7 @@ func TestLoginAPI(t *testing.T) {
 }
 
 func TestRefreshTokenAPI(t *testing.T) {
+	// Login the user with given credentials and aquired the token
 	credentials := []byte(`{"email": "testing-user@example.com", "password": "12345678Aa@"}`)
 
 	loginResponse := getResponseRecorder(http.MethodPost, "/v1/login/", credentials)
@@ -36,6 +37,7 @@ func TestRefreshTokenAPI(t *testing.T) {
 		t.Errorf("Response: %v", loginResponse.Body.String())
 	}
 
+	// Parse the API response
 	type Response struct {
 		Message string `json:"message"`
 		Data    struct {
@@ -52,6 +54,7 @@ func TestRefreshTokenAPI(t *testing.T) {
 		return
 	}
 
+	// Call refresh token API with the given refresh token and check API gives a success response or not
 	payload := []byte(fmt.Sprintf(`{"refresh_token": "%s"}`, responseBody.Data.Refresh))
 
 	response := getResponseRecorder(http.MethodPost, "/v1/refresh-token/", payload)

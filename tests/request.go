@@ -7,6 +7,7 @@ import (
 	"github.com/thejasmeetsingh/EHealth/config"
 )
 
+// A common function for calling APIs and validating test cases based on API response
 func getResponseRecorder(method string, endpoint string, payload []byte) *httptest.ResponseRecorder {
 	router := config.GetRouter(true)
 
