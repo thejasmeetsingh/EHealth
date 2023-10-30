@@ -110,7 +110,7 @@ func (apiCfg *ApiCfg) Login(c *gin.Context) {
 		return
 	}
 
-	SuccessResponse(c, http.StatusCreated, "Logged in Successfully!", tokens)
+	SuccessResponse(c, http.StatusOK, "Logged in Successfully!", tokens)
 }
 
 // Refresh Token API
