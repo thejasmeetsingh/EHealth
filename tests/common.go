@@ -49,7 +49,7 @@ func parseAuthResponse(response *httptest.ResponseRecorder) (AuthResponse, error
 func createTestingUser(payload []byte) (AuthResponse, error) {
 	response := getResponseRecorder(http.MethodPost, "/v1/signup/", "", payload)
 
-	if response.Code != http.StatusOK {
+	if response.Code != http.StatusCreated {
 		return AuthResponse{}, fmt.Errorf("response: %v", response.Body.String())
 	}
 

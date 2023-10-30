@@ -18,6 +18,7 @@ services:
 
   go-server:
     build: .
+    restart: on-failure
     container_name: go_server
     command: sh -c "./goose.sh up && go install && EHealth"
     volumes:
