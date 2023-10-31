@@ -25,6 +25,7 @@ func TestGetUserProfileAPI(t *testing.T) {
 }
 
 func TestUpdateUserProfileAPI(t *testing.T) {
+	// Login the user with given credentials and aquired the token
 	credentials := []byte(`{"email": "testing-user@example.com", "password": "12345678Aa@"}`)
 
 	authResponse, err := loginUser(credentials)
@@ -36,6 +37,7 @@ func TestUpdateUserProfileAPI(t *testing.T) {
 
 	payload := []byte(fmt.Sprintf(`{"email": "%s"}`, newEmail))
 
+	// Call the profile update API and parse the response for validation check
 	profileResponse := getResponseRecorder(http.MethodPatch, "/v1/profile/", authResponse.Data.Access, payload)
 
 	type Response struct {
@@ -57,5 +59,23 @@ func TestUpdateUserProfileAPI(t *testing.T) {
 
 	if profileResponse.Code != http.StatusOK || response.Data.Email != newEmail {
 		t.Errorf("Response: %v", profileResponse.Body.String())
+	}
+}
+
+func TestChangePasswordAPI(t *testing.T) {
+	// Login the user with given credentials and aquired the token
+	credentials := []byte(`{"email": "testing-user1@example.com", "password": "12345678Aa@"}`)
+
+	authResponse, err := loginUser(credentials)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	payload := []byte(`{"current_password": "12345678Aa@", "new_password": "12345678Ab@", "new_password_confirm": "12345678Ab@"}`)
+
+	response := getResponseRecorder(http.MethodPut, "/v1/change-password/", authResponse.Data.Access, payload)
+
+	if response.Code != http.StatusOK {
+		t.Errorf("Response: %s", response.Body.String())
 	}
 }
