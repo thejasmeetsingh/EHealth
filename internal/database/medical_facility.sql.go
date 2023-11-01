@@ -27,23 +27,24 @@ INSERT INTO medical_facility (
     address,
     location,
     user_id
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, ST_SetSRID(ST_MakePoint($11, $12), 4326), $13)
 RETURNING id, created_at, modified_at, type, name, description, email, mobile_number, charges, address, location, user_id
 `
 
 type CreateMedicalFacilityParams struct {
-	ID           uuid.UUID
-	CreatedAt    time.Time
-	ModifiedAt   time.Time
-	Type         FacilityType
-	Name         string
-	Description  sql.NullString
-	Email        string
-	MobileNumber string
-	Charges      string
-	Address      string
-	Location     interface{}
-	UserID       uuid.UUID
+	ID            uuid.UUID
+	CreatedAt     time.Time
+	ModifiedAt    time.Time
+	Type          FacilityType
+	Name          string
+	Description   sql.NullString
+	Email         string
+	MobileNumber  string
+	Charges       string
+	Address       string
+	StMakepoint   interface{}
+	StMakepoint_2 interface{}
+	UserID        uuid.UUID
 }
 
 func (q *Queries) CreateMedicalFacility(ctx context.Context, arg CreateMedicalFacilityParams) (MedicalFacility, error) {
@@ -58,7 +59,8 @@ func (q *Queries) CreateMedicalFacility(ctx context.Context, arg CreateMedicalFa
 		arg.MobileNumber,
 		arg.Charges,
 		arg.Address,
-		arg.Location,
+		arg.StMakepoint,
+		arg.StMakepoint_2,
 		arg.UserID,
 	)
 	var i MedicalFacility
@@ -136,20 +138,21 @@ email=$4,
 mobile_number=$5,
 charges=$6,
 address=$7,
-location=$8
-WHERE id=$9 RETURNING id, created_at, modified_at, type, name, description, email, mobile_number, charges, address, location, user_id
+location=ST_SetSRID(ST_MakePoint($8, $9), 4326)
+WHERE id=$10 RETURNING id, created_at, modified_at, type, name, description, email, mobile_number, charges, address, location, user_id
 `
 
 type UpdateMedicalFacilityParams struct {
-	Type         FacilityType
-	Name         string
-	Description  sql.NullString
-	Email        string
-	MobileNumber string
-	Charges      string
-	Address      string
-	Location     interface{}
-	ID           uuid.UUID
+	Type          FacilityType
+	Name          string
+	Description   sql.NullString
+	Email         string
+	MobileNumber  string
+	Charges       string
+	Address       string
+	StMakepoint   interface{}
+	StMakepoint_2 interface{}
+	ID            uuid.UUID
 }
 
 func (q *Queries) UpdateMedicalFacility(ctx context.Context, arg UpdateMedicalFacilityParams) (MedicalFacility, error) {
@@ -161,7 +164,8 @@ func (q *Queries) UpdateMedicalFacility(ctx context.Context, arg UpdateMedicalFa
 		arg.MobileNumber,
 		arg.Charges,
 		arg.Address,
-		arg.Location,
+		arg.StMakepoint,
+		arg.StMakepoint_2,
 		arg.ID,
 	)
 	var i MedicalFacility
