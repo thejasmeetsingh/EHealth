@@ -42,7 +42,7 @@ func (apiCfg *ApiCfg) AddMedicalFacility(c *gin.Context, dbUser database.User) {
 	dbMedicalFacility, err := apiCfg.DB.CreateMedicalFacility(c, database.CreateMedicalFacilityParams{
 		ID:         uuid.New(),
 		CreatedAt:  time.Now().UTC(),
-		ModifiedAt: time.Now(),
+		ModifiedAt: time.Now().UTC(),
 		Type:       database.FacilityType(params.Type),
 		Name:       params.Name,
 		Description: sql.NullString{
@@ -62,5 +62,5 @@ func (apiCfg *ApiCfg) AddMedicalFacility(c *gin.Context, dbUser database.User) {
 		return
 	}
 
-	SuccessResponse(c, http.StatusCreated, "", models.DatabaseMedicalFacilityToMedicalFacility(dbMedicalFacility))
+	SuccessResponse(c, http.StatusCreated, "Medical Facility Added Successfully!", models.DatabaseMedicalFacilityToMedicalFacility(dbMedicalFacility))
 }
