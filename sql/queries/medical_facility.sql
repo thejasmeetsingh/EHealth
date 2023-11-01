@@ -12,7 +12,7 @@ INSERT INTO medical_facility (
     address,
     location,
     user_id
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, ST_SetSRID(ST_MakePoint($11, $12), 4326), $13)
 RETURNING *;
 
 -- name: GetMedicalFacilityById :one
@@ -30,5 +30,5 @@ email=$4,
 mobile_number=$5,
 charges=$6,
 address=$7,
-location=$8
-WHERE id=$9 RETURNING *;
+location=ST_SetSRID(ST_MakePoint($8, $9), 4326)
+WHERE id=$10 RETURNING *;
