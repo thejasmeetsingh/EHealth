@@ -13,7 +13,14 @@ import (
 	"github.com/thejasmeetsingh/EHealth/validators"
 )
 
-func (apiCfg *ApiCfg) AddMedicalFacility(c *gin.Context, dbUser database.User) {
+// API for adding facility
+func (apiCfg *ApiCfg) AddMedicalFacility(c *gin.Context) {
+	dbUser, err := getDBUser(c)
+	if err != nil {
+		ErrorResponse(c, http.StatusForbidden, err.Error())
+		return
+	}
+
 	type Parameters struct {
 		Type         string  `json:"type" binding:"required"`
 		Name         string  `json:"name" binding:"required"`
@@ -23,8 +30,8 @@ func (apiCfg *ApiCfg) AddMedicalFacility(c *gin.Context, dbUser database.User) {
 		Charges      float64 `json:"charges" binding:"required"`
 		Address      string  `json:"address" binding:"required"`
 		Location     struct {
-			Lat float64 `json:"lat" binding:"required,latitude"`
-			Lng float64 `json:"lng" binding:"required,longitude"`
+			Lat float64 `json:"lat" binding:"required"`
+			Lng float64 `json:"lng" binding:"required"`
 		} `json:"location" binding:"required"`
 	}
 	var params Parameters
@@ -55,6 +62,7 @@ func (apiCfg *ApiCfg) AddMedicalFacility(c *gin.Context, dbUser database.User) {
 		Address:       params.Address,
 		StMakepoint:   params.Location.Lat,
 		StMakepoint_2: params.Location.Lng,
+		UserID:        dbUser.ID,
 	})
 
 	if err != nil {

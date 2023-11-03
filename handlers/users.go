@@ -16,12 +16,24 @@ import (
 )
 
 // Fetch user profile details
-func (apiCfg *ApiCfg) GetUserProfile(c *gin.Context, dbUser database.User) {
+func (apiCfg *ApiCfg) GetUserProfile(c *gin.Context) {
+	dbUser, err := getDBUser(c)
+	if err != nil {
+		ErrorResponse(c, http.StatusForbidden, err.Error())
+		return
+	}
+
 	SuccessResponse(c, http.StatusOK, "", models.DatabaseUserToUser(dbUser))
 }
 
 // Update user profile details
-func (apiCfg *ApiCfg) UpdateUserProfile(c *gin.Context, dbUser database.User) {
+func (apiCfg *ApiCfg) UpdateUserProfile(c *gin.Context) {
+	dbUser, err := getDBUser(c)
+	if err != nil {
+		ErrorResponse(c, http.StatusForbidden, err.Error())
+		return
+	}
+
 	type Parameters struct {
 		Email string `json:"email"`
 		Name  string `json:"name"`
@@ -66,7 +78,13 @@ func (apiCfg *ApiCfg) UpdateUserProfile(c *gin.Context, dbUser database.User) {
 }
 
 // Delete user profile
-func (apiCfg *ApiCfg) DeleteUserProfile(c *gin.Context, dbUser database.User) {
+func (apiCfg *ApiCfg) DeleteUserProfile(c *gin.Context) {
+	dbUser, err := getDBUser(c)
+	if err != nil {
+		ErrorResponse(c, http.StatusForbidden, err.Error())
+		return
+	}
+
 	if err := apiCfg.DB.DeleteUser(c, dbUser.ID); err != nil {
 		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error caught while deleting user profile: %v", err))
 		return
@@ -76,7 +94,13 @@ func (apiCfg *ApiCfg) DeleteUserProfile(c *gin.Context, dbUser database.User) {
 }
 
 // Change password API for authenticated user
-func (apiCfg *ApiCfg) ChangePassword(c *gin.Context, dbUser database.User) {
+func (apiCfg *ApiCfg) ChangePassword(c *gin.Context) {
+	dbUser, err := getDBUser(c)
+	if err != nil {
+		ErrorResponse(c, http.StatusForbidden, err.Error())
+		return
+	}
+
 	type Parameters struct {
 		CurrentPassword    string `json:"current_password"`
 		NewPassword        string `json:"new_password"`
