@@ -18,7 +18,7 @@ func (apiCfg *ApiCfg) Singup(c *gin.Context) {
 	type Parameters struct {
 		Email     string `json:"email" binding:"required,email"`
 		Password  string `json:"password" binding:"required"`
-		IsEndUser bool   `json:"is_end_user" binding:"required"`
+		IsEndUser bool   `json:"is_end_user"`
 	}
 
 	var params Parameters

@@ -9,16 +9,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/thejasmeetsingh/EHealth/handlers"
-	"github.com/thejasmeetsingh/EHealth/internal/database"
 	"github.com/thejasmeetsingh/EHealth/utils"
 )
-
-type authHandler func(*gin.Context, database.User)
 
 // Validate the request by checking wheather or not they have the valid JWT access token or not
 //
 // Token format: Bearer <TOKEN>
-func JWTAuth(apiCfg handlers.ApiCfg, handler authHandler) gin.HandlerFunc {
+func JWTAuth(apiCfg handlers.ApiCfg) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		headerAuthToken := ctx.GetHeader("Authorization")
 
@@ -69,7 +66,9 @@ func JWTAuth(apiCfg handlers.ApiCfg, handler authHandler) gin.HandlerFunc {
 			return
 		}
 
+		ctx.Set("user", dbUser)
+
 		// Further call the given handler and send the user instance as well
-		handler(ctx, dbUser)
+		ctx.Next()
 	}
 }
