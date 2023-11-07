@@ -82,12 +82,43 @@ func (q *Queries) CreateMedicalFacility(ctx context.Context, arg CreateMedicalFa
 }
 
 const getMedicalFacilityById = `-- name: GetMedicalFacilityById :one
-SELECT id, created_at, modified_at, type, name, description, email, mobile_number, charges, address, location, user_id FROM medical_facility WHERE id=$1
+SELECT 
+    id,
+    created_at,
+    modified_at,
+    type,
+    name,
+    description,
+    email,
+    mobile_number,
+    charges,
+    address,
+    ST_X(location) AS lat,
+    ST_y(location) AS lng,
+    user_id
+FROM 
+    medical_facility WHERE id=$1
 `
 
-func (q *Queries) GetMedicalFacilityById(ctx context.Context, id uuid.UUID) (MedicalFacility, error) {
+type GetMedicalFacilityByIdRow struct {
+	ID           uuid.UUID
+	CreatedAt    time.Time
+	ModifiedAt   time.Time
+	Type         FacilityType
+	Name         string
+	Description  sql.NullString
+	Email        string
+	MobileNumber string
+	Charges      string
+	Address      string
+	Lat          interface{}
+	Lng          interface{}
+	UserID       uuid.UUID
+}
+
+func (q *Queries) GetMedicalFacilityById(ctx context.Context, id uuid.UUID) (GetMedicalFacilityByIdRow, error) {
 	row := q.db.QueryRowContext(ctx, getMedicalFacilityById, id)
-	var i MedicalFacility
+	var i GetMedicalFacilityByIdRow
 	err := row.Scan(
 		&i.ID,
 		&i.CreatedAt,
@@ -99,19 +130,51 @@ func (q *Queries) GetMedicalFacilityById(ctx context.Context, id uuid.UUID) (Med
 		&i.MobileNumber,
 		&i.Charges,
 		&i.Address,
-		&i.Location,
+		&i.Lat,
+		&i.Lng,
 		&i.UserID,
 	)
 	return i, err
 }
 
 const getMedicalFacilityByUserId = `-- name: GetMedicalFacilityByUserId :one
-SELECT id, created_at, modified_at, type, name, description, email, mobile_number, charges, address, location, user_id FROM medical_facility WHERE user_id=$1
+SELECT 
+    id,
+    created_at,
+    modified_at,
+    type,
+    name,
+    description,
+    email,
+    mobile_number,
+    charges,
+    address,
+    ST_X(location) AS lat,
+    ST_y(location) AS lng,
+    user_id
+FROM 
+    medical_facility WHERE user_id=$1
 `
 
-func (q *Queries) GetMedicalFacilityByUserId(ctx context.Context, userID uuid.UUID) (MedicalFacility, error) {
+type GetMedicalFacilityByUserIdRow struct {
+	ID           uuid.UUID
+	CreatedAt    time.Time
+	ModifiedAt   time.Time
+	Type         FacilityType
+	Name         string
+	Description  sql.NullString
+	Email        string
+	MobileNumber string
+	Charges      string
+	Address      string
+	Lat          interface{}
+	Lng          interface{}
+	UserID       uuid.UUID
+}
+
+func (q *Queries) GetMedicalFacilityByUserId(ctx context.Context, userID uuid.UUID) (GetMedicalFacilityByUserIdRow, error) {
 	row := q.db.QueryRowContext(ctx, getMedicalFacilityByUserId, userID)
-	var i MedicalFacility
+	var i GetMedicalFacilityByUserIdRow
 	err := row.Scan(
 		&i.ID,
 		&i.CreatedAt,
@@ -123,7 +186,8 @@ func (q *Queries) GetMedicalFacilityByUserId(ctx context.Context, userID uuid.UU
 		&i.MobileNumber,
 		&i.Charges,
 		&i.Address,
-		&i.Location,
+		&i.Lat,
+		&i.Lng,
 		&i.UserID,
 	)
 	return i, err

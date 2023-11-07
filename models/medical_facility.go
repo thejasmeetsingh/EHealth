@@ -7,6 +7,11 @@ import (
 	"github.com/thejasmeetsingh/EHealth/internal/database"
 )
 
+type Coordinates struct {
+	Lat interface{} `json:"lat"`
+	Lng interface{} `json:"lng"`
+}
+
 type medicalFacility struct {
 	ID           uuid.UUID   `json:"id"`
 	CreatedAt    time.Time   `json:"created_at"`
@@ -21,7 +26,7 @@ type medicalFacility struct {
 	Location     interface{} `json:"location"`
 }
 
-func DatabaseMedicalFacilityToMedicalFacility(dbMedicalFacility database.MedicalFacility) medicalFacility {
+func DatabaseMedicalFacilityToMedicalFacility(dbMedicalFacility database.GetMedicalFacilityByUserIdRow) medicalFacility {
 	return medicalFacility{
 		ID:           dbMedicalFacility.ID,
 		CreatedAt:    dbMedicalFacility.CreatedAt,
@@ -33,6 +38,9 @@ func DatabaseMedicalFacilityToMedicalFacility(dbMedicalFacility database.Medical
 		MobileNumber: dbMedicalFacility.MobileNumber,
 		Charges:      dbMedicalFacility.Charges,
 		Address:      dbMedicalFacility.Address,
-		Location:     dbMedicalFacility.Location,
+		Location: Coordinates{
+			Lat: dbMedicalFacility.Lat,
+			Lng: dbMedicalFacility.Lng,
+		},
 	}
 }

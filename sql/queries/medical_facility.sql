@@ -16,10 +16,40 @@ INSERT INTO medical_facility (
 RETURNING *;
 
 -- name: GetMedicalFacilityById :one
-SELECT * FROM medical_facility WHERE id=$1;
+SELECT 
+    id,
+    created_at,
+    modified_at,
+    type,
+    name,
+    description,
+    email,
+    mobile_number,
+    charges,
+    address,
+    ST_X(location) AS lat,
+    ST_y(location) AS lng,
+    user_id
+FROM 
+    medical_facility WHERE id=$1;
 
 -- name: GetMedicalFacilityByUserId :one
-SELECT * FROM medical_facility WHERE user_id=$1;
+SELECT 
+    id,
+    created_at,
+    modified_at,
+    type,
+    name,
+    description,
+    email,
+    mobile_number,
+    charges,
+    address,
+    ST_X(location) AS lat,
+    ST_y(location) AS lng,
+    user_id
+FROM 
+    medical_facility WHERE user_id=$1;
 
 -- name: UpdateMedicalFacility :one
 UPDATE medical_facility SET

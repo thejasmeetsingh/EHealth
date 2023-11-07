@@ -13,6 +13,23 @@ import (
 	"github.com/thejasmeetsingh/EHealth/validators"
 )
 
+// API for fetching the medical facility details related to a user, if exists
+func (apiCfg *ApiCfg) GetMedicalFacilityDetails(c *gin.Context) {
+	dbUser, err := getDBUser(c)
+	if err != nil {
+		ErrorResponse(c, http.StatusForbidden, err.Error())
+		return
+	}
+
+	dbMedicalFacility, err := apiCfg.DB.GetMedicalFacilityByUserId(c, dbUser.ID)
+	if err != nil {
+		ErrorResponse(c, http.StatusBadRequest, "Error while fetching facility details or facility does not exists")
+		return
+	}
+
+	SuccessResponse(c, http.StatusOK, "", models.DatabaseMedicalFacilityToMedicalFacility(dbMedicalFacility))
+}
+
 // API for adding facility
 func (apiCfg *ApiCfg) AddMedicalFacility(c *gin.Context) {
 	dbUser, err := getDBUser(c)
@@ -46,7 +63,7 @@ func (apiCfg *ApiCfg) AddMedicalFacility(c *gin.Context) {
 		return
 	}
 
-	dbMedicalFacility, err := apiCfg.DB.CreateMedicalFacility(c, database.CreateMedicalFacilityParams{
+	_, err = apiCfg.DB.CreateMedicalFacility(c, database.CreateMedicalFacilityParams{
 		ID:         uuid.New(),
 		CreatedAt:  time.Now().UTC(),
 		ModifiedAt: time.Now().UTC(),
@@ -70,5 +87,5 @@ func (apiCfg *ApiCfg) AddMedicalFacility(c *gin.Context) {
 		return
 	}
 
-	SuccessResponse(c, http.StatusCreated, "Medical Facility Added Successfully!", models.DatabaseMedicalFacilityToMedicalFacility(dbMedicalFacility))
+	SuccessResponse(c, http.StatusCreated, "Medical Facility Added Successfully!", params)
 }
