@@ -22,6 +22,7 @@ func (apiCfg *ApiCfg) GetMedicalFacilityDetails(c *gin.Context) {
 		return
 	}
 
+	// Fetch medical facility details from the DB
 	dbMedicalFacility, err := apiCfg.DB.GetMedicalFacilityByUserId(c, dbUser.ID)
 	if err != nil {
 		ErrorResponse(c, http.StatusBadRequest, "Error while fetching facility details or facility does not exists")
@@ -59,6 +60,7 @@ func (apiCfg *ApiCfg) AddMedicalFacility(c *gin.Context) {
 		return
 	}
 
+	// Validate the mobile number provided in payload
 	if err := validators.MobileNumberValidator(params.MobileNumber); err != nil {
 		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Invalid mobile number: %v", err))
 		return
@@ -69,6 +71,7 @@ func (apiCfg *ApiCfg) AddMedicalFacility(c *gin.Context) {
 		Valid:  true,
 	}
 
+	// Create medical facility record in the DB
 	_, err = apiCfg.DB.CreateMedicalFacility(c, database.CreateMedicalFacilityParams{
 		ID:            uuid.New(),
 		CreatedAt:     time.Now().UTC(),
@@ -101,6 +104,7 @@ func (apiCfg *ApiCfg) UpdateMedicalFacility(c *gin.Context) {
 		return
 	}
 
+	// Fetch medical facility details from the DB
 	dbMedicalFacility, err := apiCfg.DB.GetMedicalFacilityByUserId(c, dbUser.ID)
 	if err != nil {
 		ErrorResponse(c, http.StatusBadRequest, "Error while fetching facility details or facility does not exists")
@@ -128,6 +132,8 @@ func (apiCfg *ApiCfg) UpdateMedicalFacility(c *gin.Context) {
 		return
 	}
 
+	// Fill the data from the DB, if it is not send in the payload
+
 	if params.Type == "" {
 		params.Type = string(dbMedicalFacility.Type)
 	}
@@ -144,6 +150,7 @@ func (apiCfg *ApiCfg) UpdateMedicalFacility(c *gin.Context) {
 		params.Email = dbMedicalFacility.Email
 	}
 
+	// Validate the medical facility email
 	if !validators.EmailValidator(params.Email) {
 		ErrorResponse(c, http.StatusBadRequest, "Invalid email address")
 		return
@@ -153,11 +160,13 @@ func (apiCfg *ApiCfg) UpdateMedicalFacility(c *gin.Context) {
 		params.MobileNumber = dbMedicalFacility.MobileNumber
 	}
 
+	// Validate the medical facility mobile number
 	if err := validators.MobileNumberValidator(params.MobileNumber); err != nil {
 		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Invalid mobile number: %v", err))
 		return
 	}
 
+	// Conver the charges to float
 	if params.Charges == 0 {
 		chargesFloatValue, err := strconv.ParseFloat(dbMedicalFacility.Charges, 64)
 		if err != nil {
@@ -181,6 +190,7 @@ func (apiCfg *ApiCfg) UpdateMedicalFacility(c *gin.Context) {
 		Valid:  true,
 	}
 
+	// Update the medical facility record
 	_, err = apiCfg.DB.UpdateMedicalFacility(c, database.UpdateMedicalFacilityParams{
 		ID:            dbMedicalFacility.ID,
 		Type:          database.FacilityType(params.Type),
