@@ -58,23 +58,39 @@ func (q *Queries) AddMedicalFacilityTimings(ctx context.Context, arg AddMedicalF
 	return i, err
 }
 
-const getMedicalFacilityTimingDetails = `-- name: GetMedicalFacilityTimingDetails :one
+const getMedicalFacilityTimingDetails = `-- name: GetMedicalFacilityTimingDetails :many
 SELECT id, created_at, modified_at, medical_facility_id, weekday, start_datetime, end_datetime FROM medical_facility_timings WHERE medical_facility_id=$1
 `
 
-func (q *Queries) GetMedicalFacilityTimingDetails(ctx context.Context, medicalFacilityID uuid.UUID) (MedicalFacilityTiming, error) {
-	row := q.db.QueryRowContext(ctx, getMedicalFacilityTimingDetails, medicalFacilityID)
-	var i MedicalFacilityTiming
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.ModifiedAt,
-		&i.MedicalFacilityID,
-		&i.Weekday,
-		&i.StartDatetime,
-		&i.EndDatetime,
-	)
-	return i, err
+func (q *Queries) GetMedicalFacilityTimingDetails(ctx context.Context, medicalFacilityID uuid.UUID) ([]MedicalFacilityTiming, error) {
+	rows, err := q.db.QueryContext(ctx, getMedicalFacilityTimingDetails, medicalFacilityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MedicalFacilityTiming
+	for rows.Next() {
+		var i MedicalFacilityTiming
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.ModifiedAt,
+			&i.MedicalFacilityID,
+			&i.Weekday,
+			&i.StartDatetime,
+			&i.EndDatetime,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateMedicalFacilityTimings = `-- name: UpdateMedicalFacilityTimings :one

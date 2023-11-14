@@ -10,7 +10,7 @@ INSERT INTO medical_facility_timings (
 ) VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;
 
--- name: GetMedicalFacilityTimingDetails :one
+-- name: GetMedicalFacilityTimingDetails :many
 SELECT * FROM medical_facility_timings WHERE medical_facility_id=$1;
 
 -- name: UpdateMedicalFacilityTimings :one
