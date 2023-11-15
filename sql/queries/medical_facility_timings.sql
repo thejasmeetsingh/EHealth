@@ -13,10 +13,13 @@ RETURNING *;
 -- name: GetMedicalFacilityTimingDetails :many
 SELECT * FROM medical_facility_timings WHERE medical_facility_id=$1;
 
+-- name: GetMedicalFacilityTimingById :one
+SELECT * FROM medical_facility_timings WHERE id=$1;
+
 -- name: UpdateMedicalFacilityTimings :one
 UPDATE medical_facility_timings SET
 weekday=$1,
 start_datetime=$2,
 end_datetime=$3
-WHERE medical_facility_id=$4 
+WHERE id=$4 
 RETURNING *;

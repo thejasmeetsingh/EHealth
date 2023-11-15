@@ -67,6 +67,7 @@ func GetRouter(isTest bool) *gin.Engine {
 
 	nonEndUserResources.POST("/medical-facility-timing/", apiCfg.AddMedicalFacilityTiming)
 	nonEndUserResources.GET("/medical-facility-timing/", apiCfg.GetMedicalFacilityTimings)
+	nonEndUserResources.PATCH("/medical-facility-timing/:id/", apiCfg.UpdateMedicalFacilityTiming)
 
 	return router
 }

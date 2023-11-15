@@ -104,3 +104,80 @@ func (apiCfg *ApiCfg) AddMedicalFacilityTiming(c *gin.Context) {
 
 	SuccessResponse(c, http.StatusCreated, "Medical Facility Timings Details Added Successfully!", models.DatabaseMedicalFacilityTimingToMedicalFacilityTiming(dbMedicalFacilityTimings))
 }
+
+// API for updating a medical facility timing record
+func (apiCfg *ApiCfg) UpdateMedicalFacilityTiming(c *gin.Context) {
+	// Convert the passed ID to UUID
+	medicalFacilityTimingIdStr := c.Param("id")
+	medicalFacilityTimingId, err := uuid.Parse(medicalFacilityTimingIdStr)
+
+	if err != nil {
+		ErrorResponse(c, http.StatusForbidden, "Invalid ID")
+		return
+	}
+
+	// Fetch medical facility detail of a given ID from DB
+	dbMedicalFacilityTiming, err := apiCfg.DB.GetMedicalFacilityTimingById(c, medicalFacilityTimingId)
+	if err != nil {
+		ErrorResponse(c, http.StatusForbidden, "Medical Facility Detail with the given ID does not exists")
+		return
+	}
+
+	type Parameters struct {
+		Weekday       string `json:"weekday"`
+		StartDateTime string `json:"start_datetime"`
+		EndDateTime   string `json:"end_datetime"`
+	}
+	var params Parameters
+
+	if err := c.ShouldBindJSON(&params); err != nil {
+		ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while parsing the request: %v", err.Error()))
+		return
+	}
+
+	startDateTime := dbMedicalFacilityTiming.StartDatetime
+	endDateTime := dbMedicalFacilityTiming.EndDatetime
+	weekDay := dbMedicalFacilityTiming.Weekday
+
+	if params.Weekday != "" {
+		weekDay = database.WeekdayType(params.Weekday)
+	}
+
+	// Parse time string to time object
+	if params.StartDateTime != "" {
+		startDateTime, err = time.Parse(models.TimeFormat, params.StartDateTime)
+		if err != nil {
+			ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Invalid Start datetime format: %v", err.Error()))
+			return
+		}
+	}
+
+	if params.EndDateTime != "" {
+		endDateTime, err = time.Parse(models.TimeFormat, params.EndDateTime)
+		if err != nil {
+			ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Invalid End datetime format: %v", err.Error()))
+			return
+		}
+	}
+
+	// Check wheather the start datetime is less than equal to end datetime or not
+	if endDateTime.Hour() <= startDateTime.Hour() {
+		ErrorResponse(c, http.StatusBadRequest, "End datetime should be greater than Start datetime")
+		return
+	}
+
+	// Update the details in DB
+	dbMedicalFacilityTiming, err = apiCfg.DB.UpdateMedicalFacilityTimings(c, database.UpdateMedicalFacilityTimingsParams{
+		Weekday:       weekDay,
+		StartDatetime: startDateTime,
+		EndDatetime:   endDateTime,
+		ID:            medicalFacilityTimingId,
+	})
+
+	if err != nil {
+		ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while updating medical facility timing: %v", err.Error()))
+		return
+	}
+
+	SuccessResponse(c, http.StatusOK, "Medical Facility Timings Details Updated Successfully!", models.DatabaseMedicalFacilityTimingToMedicalFacilityTiming(dbMedicalFacilityTiming))
+}
