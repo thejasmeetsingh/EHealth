@@ -7,11 +7,11 @@ import (
 	"testing"
 )
 
-const credentials = `{"email": "testing-doc@example.com", "password": "12345678Aa@"}`
+const doctorCredentials = `{"email": "testing-doc@example.com", "password": "12345678Aa@"}`
 
 func TestAddMedicalFacilityAPI(t *testing.T) {
 	// Create a testing doctor user
-	authResponse, err := createTestingUser([]byte(credentials))
+	authResponse, err := createTestingUser([]byte(doctorCredentials))
 
 	if err != nil {
 		t.Errorf(err.Error())
@@ -30,7 +30,7 @@ func TestAddMedicalFacilityAPI(t *testing.T) {
 
 func TestGetMedicalFacilityDetails(t *testing.T) {
 	// login the testing user
-	authResponse, err := loginUser([]byte(credentials))
+	authResponse, err := loginUser([]byte(doctorCredentials))
 
 	if err != nil {
 		t.Error(err.Error())
@@ -46,7 +46,7 @@ func TestGetMedicalFacilityDetails(t *testing.T) {
 
 func TestUpdateMedicalFacilityAPI(t *testing.T) {
 	// login the testing user
-	authResponse, err := loginUser([]byte(credentials))
+	authResponse, err := loginUser([]byte(doctorCredentials))
 
 	if err != nil {
 		t.Error(err.Error())
