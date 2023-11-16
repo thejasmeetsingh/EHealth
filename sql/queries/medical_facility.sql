@@ -62,3 +62,14 @@ charges=$6,
 address=$7,
 location=ST_SetSRID(ST_MakePoint($8, $9), 4326)
 WHERE id=$10 RETURNING *;
+
+-- name: MedicalFacilityListing :many
+SELECT
+id,
+type,
+name,
+charges,
+address,
+CAST(ST_DistanceSphere(location, ST_MakePoint($1, $2)) / 1000 AS FLOAT) AS distance
+FROM medical_facility
+ORDER BY distance;

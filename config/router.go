@@ -48,6 +48,9 @@ func GetRouter(isTest bool) *gin.Engine {
 	nonEndUserResources := authResources.Group("")
 	nonEndUserResources.Use(middlewares.NonEndUser)
 
+	endUserResources := authResources.Group("")
+	endUserResources.Use(middlewares.EndUser)
+
 	// Non-auth endpoints
 	v1.POST("/signup/", apiCfg.Singup)
 	v1.POST("/login/", apiCfg.Login)
@@ -68,6 +71,9 @@ func GetRouter(isTest bool) *gin.Engine {
 	nonEndUserResources.POST("/medical-facility-timing/", apiCfg.AddMedicalFacilityTiming)
 	nonEndUserResources.GET("/medical-facility-timing/", apiCfg.GetMedicalFacilityTimings)
 	nonEndUserResources.PATCH("/medical-facility-timing/:id/", apiCfg.UpdateMedicalFacilityTiming)
+
+	// End user resources
+	endUserResources.GET("/facility/", apiCfg.MedicalFacilityListing)
 
 	return router
 }

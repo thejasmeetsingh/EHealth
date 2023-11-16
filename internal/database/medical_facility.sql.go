@@ -193,6 +193,62 @@ func (q *Queries) GetMedicalFacilityByUserId(ctx context.Context, userID uuid.UU
 	return i, err
 }
 
+const medicalFacilityListing = `-- name: MedicalFacilityListing :many
+SELECT
+id,
+type,
+name,
+charges,
+address,
+CAST(ST_DistanceSphere(location, ST_MakePoint($1, $2)) / 1000 AS FLOAT) AS distance
+FROM medical_facility
+ORDER BY distance
+`
+
+type MedicalFacilityListingParams struct {
+	StMakepoint   interface{}
+	StMakepoint_2 interface{}
+}
+
+type MedicalFacilityListingRow struct {
+	ID       uuid.UUID
+	Type     FacilityType
+	Name     string
+	Charges  string
+	Address  string
+	Distance float64
+}
+
+func (q *Queries) MedicalFacilityListing(ctx context.Context, arg MedicalFacilityListingParams) ([]MedicalFacilityListingRow, error) {
+	rows, err := q.db.QueryContext(ctx, medicalFacilityListing, arg.StMakepoint, arg.StMakepoint_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MedicalFacilityListingRow
+	for rows.Next() {
+		var i MedicalFacilityListingRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Type,
+			&i.Name,
+			&i.Charges,
+			&i.Address,
+			&i.Distance,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateMedicalFacility = `-- name: UpdateMedicalFacility :one
 UPDATE medical_facility SET
 type=$1,

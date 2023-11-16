@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -43,4 +44,30 @@ func DatabaseMedicalFacilityToMedicalFacility(dbMedicalFacility database.GetMedi
 			Lng: dbMedicalFacility.Lng,
 		},
 	}
+}
+
+type medicalFacilityListing struct {
+	ID       uuid.UUID `json:"id"`
+	Type     string    `json:"type"`
+	Name     string    `json:"name"`
+	Charges  string    `json:"charges"`
+	Address  string    `json:"address"`
+	Distance string    `json:"distance"`
+}
+
+func DatabaseMedicalFacilitiesToMedicalFacilities(dbMedicalFacilities []database.MedicalFacilityListingRow) []medicalFacilityListing {
+	var medicalFacilities []medicalFacilityListing
+
+	for _, dbMedicalFacility := range dbMedicalFacilities {
+		medicalFacilities = append(medicalFacilities, medicalFacilityListing{
+			ID:       dbMedicalFacility.ID,
+			Type:     string(dbMedicalFacility.Type),
+			Name:     dbMedicalFacility.Name,
+			Charges:  dbMedicalFacility.Charges,
+			Address:  dbMedicalFacility.Address,
+			Distance: fmt.Sprintf("%.2f", dbMedicalFacility.Distance),
+		})
+	}
+
+	return medicalFacilities
 }
