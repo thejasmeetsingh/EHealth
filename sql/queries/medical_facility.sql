@@ -73,3 +73,19 @@ address,
 CAST(ST_DistanceSphere(location, ST_MakePoint($1, $2)) / 1000 AS FLOAT) AS distance
 FROM medical_facility
 ORDER BY distance;
+
+-- name: MedicalFacilityDetail :one
+SELECT
+id,
+type,
+name,
+description,
+email,
+mobile_number,
+charges,
+address,
+ST_X(location) AS lat,
+ST_y(location) AS lng,
+CAST(ST_DistanceSphere(location, ST_MakePoint($1, $2)) / 1000 AS FLOAT) AS distance
+FROM medical_facility
+WHERE id=$3;

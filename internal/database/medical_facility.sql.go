@@ -193,6 +193,62 @@ func (q *Queries) GetMedicalFacilityByUserId(ctx context.Context, userID uuid.UU
 	return i, err
 }
 
+const medicalFacilityDetail = `-- name: MedicalFacilityDetail :one
+SELECT
+id,
+type,
+name,
+description,
+email,
+mobile_number,
+charges,
+address,
+ST_X(location) AS lat,
+ST_y(location) AS lng,
+CAST(ST_DistanceSphere(location, ST_MakePoint($1, $2)) / 1000 AS FLOAT) AS distance
+FROM medical_facility
+WHERE id=$3
+`
+
+type MedicalFacilityDetailParams struct {
+	StMakepoint   interface{}
+	StMakepoint_2 interface{}
+	ID            uuid.UUID
+}
+
+type MedicalFacilityDetailRow struct {
+	ID           uuid.UUID
+	Type         FacilityType
+	Name         string
+	Description  sql.NullString
+	Email        string
+	MobileNumber string
+	Charges      string
+	Address      string
+	Lat          interface{}
+	Lng          interface{}
+	Distance     float64
+}
+
+func (q *Queries) MedicalFacilityDetail(ctx context.Context, arg MedicalFacilityDetailParams) (MedicalFacilityDetailRow, error) {
+	row := q.db.QueryRowContext(ctx, medicalFacilityDetail, arg.StMakepoint, arg.StMakepoint_2, arg.ID)
+	var i MedicalFacilityDetailRow
+	err := row.Scan(
+		&i.ID,
+		&i.Type,
+		&i.Name,
+		&i.Description,
+		&i.Email,
+		&i.MobileNumber,
+		&i.Charges,
+		&i.Address,
+		&i.Lat,
+		&i.Lng,
+		&i.Distance,
+	)
+	return i, err
+}
+
 const medicalFacilityListing = `-- name: MedicalFacilityListing :many
 SELECT
 id,
