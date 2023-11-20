@@ -6,8 +6,12 @@ import (
 	"testing"
 )
 
+var (
+	userCredentials = `{"email": "testing-user@example.com", "password": "12345678Aa@", "is_end_user": true}`
+)
+
 func TestSignUpAPI(t *testing.T) {
-	payload := []byte(`{"email": "testing-user@example.com", "password": "12345678Aa@", "is_end_user": true}`)
+	payload := []byte(userCredentials)
 	_, err := createTestingUser(payload)
 
 	if err != nil {
@@ -17,7 +21,7 @@ func TestSignUpAPI(t *testing.T) {
 }
 
 func TestLoginAPI(t *testing.T) {
-	credentials := []byte(`{"email": "testing-user@example.com", "password": "12345678Aa@"}`)
+	credentials := []byte(userCredentials)
 	_, err := loginUser(credentials)
 
 	if err != nil {
@@ -28,7 +32,7 @@ func TestLoginAPI(t *testing.T) {
 
 func TestRefreshTokenAPI(t *testing.T) {
 	// Login the user with given credentials and aquired the token
-	credentials := []byte(`{"email": "testing-user@example.com", "password": "12345678Aa@"}`)
+	credentials := []byte(userCredentials)
 
 	authResponse, err := loginUser(credentials)
 	if err != nil {
