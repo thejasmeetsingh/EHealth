@@ -59,3 +59,24 @@ func (apiCfg *ApiCfg) CreateBooking(c *gin.Context) {
 
 	SuccessResponse(c, http.StatusOK, "Booking Created Successfully!", dbBooking)
 }
+
+// API for getting booking details based on booking ID
+func (apiCfg *ApiCfg) GetBooking(c *gin.Context) {
+	// Parse booking ID
+	bookingIDStr := c.Param("id")
+	bookingID, err := uuid.Parse(bookingIDStr)
+
+	if err != nil {
+		ErrorResponse(c, http.StatusBadRequest, "Invalid medical facility ID")
+		return
+	}
+
+	dbBooking, err := apiCfg.DB.GetBooking(c, bookingID)
+
+	if err != nil {
+		ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while fetching booking details: %v", err.Error()))
+		return
+	}
+
+	SuccessResponse(c, http.StatusOK, "", dbBooking)
+}

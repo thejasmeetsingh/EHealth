@@ -56,6 +56,7 @@ func GetRouter(isTest bool) *gin.Engine {
 	v1.POST("/login/", apiCfg.Login)
 	v1.POST("/reset-password/", apiCfg.ResetPassword)
 	v1.POST("/refresh-token/", apiCfg.RefreshAccessToken)
+	v1.GET("/booking/:id/", apiCfg.GetBooking)
 
 	// Auth Endpoints
 	authResources.GET("/profile/", apiCfg.GetUserProfile)
