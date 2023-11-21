@@ -75,6 +75,7 @@ func GetRouter(isTest bool) *gin.Engine {
 	// End user resources
 	endUserResources.GET("/facility/", apiCfg.MedicalFacilityListing)
 	endUserResources.GET("/facility/:id/", apiCfg.MedicalFacilityDetail)
+	endUserResources.POST("/booking/", apiCfg.CreateBooking)
 
 	return router
 }
