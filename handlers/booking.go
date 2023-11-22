@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/thejasmeetsingh/EHealth/internal/database"
+	"github.com/thejasmeetsingh/EHealth/models"
 )
 
 // API for creating booking record
@@ -57,11 +58,24 @@ func (apiCfg *ApiCfg) CreateBooking(c *gin.Context) {
 		return
 	}
 
-	SuccessResponse(c, http.StatusOK, "Booking Created Successfully!", dbBooking)
+	dbMedicalFacility, err := apiCfg.DB.GetMedicalFacilityById(c, medicalFacilityID)
+
+	if err != nil {
+		ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while fetching medical facility details: %v", err.Error()))
+		return
+	}
+
+	SuccessResponse(c, http.StatusOK, "Booking Created Successfully!", models.DatabaseBookingToBookingMedicalFacility(dbBooking, dbMedicalFacility))
 }
 
 // API for getting booking details based on booking ID
 func (apiCfg *ApiCfg) GetBooking(c *gin.Context) {
+	dbUser, err := getDBUser(c)
+	if err != nil {
+		ErrorResponse(c, http.StatusForbidden, err.Error())
+		return
+	}
+
 	// Parse booking ID
 	bookingIDStr := c.Param("id")
 	bookingID, err := uuid.Parse(bookingIDStr)
@@ -78,5 +92,17 @@ func (apiCfg *ApiCfg) GetBooking(c *gin.Context) {
 		return
 	}
 
-	SuccessResponse(c, http.StatusOK, "", dbBooking)
+	if dbUser.IsEndUser {
+		dbMedicalFacility, err := apiCfg.DB.GetMedicalFacilityById(c, dbBooking.MedicalFacilityID)
+		if err != nil {
+			ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while fetching medical facility details: %v", err.Error()))
+			return
+		}
+
+		bookingResponse := models.DatabaseBookingToBookingMedicalFacility(dbBooking, dbMedicalFacility)
+		SuccessResponse(c, http.StatusOK, "", bookingResponse)
+	} else {
+		bookingResponse := models.DatabaseBookingToBookingUser(dbBooking, dbUser)
+		SuccessResponse(c, http.StatusOK, "", bookingResponse)
+	}
 }
