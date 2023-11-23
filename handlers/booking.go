@@ -20,15 +20,26 @@ func (apiCfg *ApiCfg) CreateBooking(c *gin.Context) {
 	}
 
 	type Parameters struct {
-		MedicalFacilityID string    `json:"medical_facility_id"`
-		StartDateTime     time.Time `json:"start_datetime"`
-		EndDateTime       time.Time `json:"end_datetime"`
+		MedicalFacilityID string    `json:"medical_facility_id" binding:"required"`
+		StartDateTime     time.Time `json:"start_datetime" binding:"required"`
+		EndDateTime       time.Time `json:"end_datetime" binding:"required"`
 	}
 
 	var params Parameters
 
+	if err = c.ShouldBindJSON(&params); err != nil {
+		ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Check if datetime is in the past or not
+	if time.Now().After(params.StartDateTime) || time.Now().Equal(params.StartDateTime) {
+		ErrorResponse(c, http.StatusBadRequest, "Start DateTime should be greater than current DateTime")
+		return
+	}
+
 	// Check if start datetime is less than end datetime or not
-	if params.StartDateTime.Before(params.EndDateTime) || params.StartDateTime.Equal(params.EndDateTime) {
+	if params.StartDateTime.After(params.EndDateTime) || params.StartDateTime.Equal(params.EndDateTime) {
 		ErrorResponse(c, http.StatusBadRequest, "End DateTime should be greater than Start DateTime")
 		return
 	}

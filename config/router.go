@@ -56,13 +56,13 @@ func GetRouter(isTest bool) *gin.Engine {
 	v1.POST("/login/", apiCfg.Login)
 	v1.POST("/reset-password/", apiCfg.ResetPassword)
 	v1.POST("/refresh-token/", apiCfg.RefreshAccessToken)
-	v1.GET("/booking/:id/", apiCfg.GetBooking)
 
 	// Auth Endpoints
 	authResources.GET("/profile/", apiCfg.GetUserProfile)
 	authResources.PATCH("/profile/", apiCfg.UpdateUserProfile)
 	authResources.DELETE("/profile/", apiCfg.DeleteUserProfile)
 	authResources.PUT("/change-password/", apiCfg.ChangePassword)
+	authResources.GET("/booking/:id/", apiCfg.GetBooking)
 
 	// Non end user resources
 	nonEndUserResources.POST("/medical-facility/", apiCfg.AddMedicalFacility)
