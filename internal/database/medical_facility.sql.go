@@ -195,17 +195,17 @@ func (q *Queries) GetMedicalFacilityByUserId(ctx context.Context, userID uuid.UU
 
 const medicalFacilityDetail = `-- name: MedicalFacilityDetail :one
 SELECT
-id,
-type,
-name,
-description,
-email,
-mobile_number,
-charges,
-address,
-ST_X(location) AS lat,
-ST_y(location) AS lng,
-CAST(ST_DistanceSphere(location, ST_MakePoint($1, $2)) / 1000 AS FLOAT) AS distance
+    id,
+    type,
+    name,
+    description,
+    email,
+    mobile_number,
+    charges,
+    address,
+    ST_X(location) AS lat,
+    ST_y(location) AS lng,
+    CAST(ST_DistanceSphere(location, ST_MakePoint($1, $2)) / 1000 AS FLOAT) AS distance
 FROM medical_facility
 WHERE id=$3
 `
@@ -251,12 +251,12 @@ func (q *Queries) MedicalFacilityDetail(ctx context.Context, arg MedicalFacility
 
 const medicalFacilityListing = `-- name: MedicalFacilityListing :many
 SELECT
-id,
-type,
-name,
-charges,
-address,
-CAST(ST_DistanceSphere(location, ST_MakePoint($1, $2)) / 1000 AS FLOAT) AS distance
+    id,
+    type,
+    name,
+    charges,
+    address,
+    CAST(ST_DistanceSphere(location, ST_MakePoint($1, $2)) / 1000 AS FLOAT) AS distance
 FROM medical_facility
 ORDER BY distance
 `

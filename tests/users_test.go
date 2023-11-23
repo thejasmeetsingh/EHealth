@@ -9,7 +9,7 @@ import (
 
 func TestGetUserProfileAPI(t *testing.T) {
 	// Login the user with given credentials and aquired the token
-	credentials := []byte(`{"email": "testing-user@example.com", "password": "12345678Aa@"}`)
+	credentials := []byte(userCredentials)
 
 	authResponse, err := loginUser(credentials)
 	if err != nil {
@@ -26,7 +26,7 @@ func TestGetUserProfileAPI(t *testing.T) {
 
 func TestUpdateUserProfileAPI(t *testing.T) {
 	// Login the user with given credentials and aquired the token
-	credentials := []byte(`{"email": "testing-user@example.com", "password": "12345678Aa@"}`)
+	credentials := []byte(userCredentials)
 
 	authResponse, err := loginUser(credentials)
 	if err != nil {
@@ -60,11 +60,13 @@ func TestUpdateUserProfileAPI(t *testing.T) {
 	if profileResponse.Code != http.StatusOK || response.Data.Email != newEmail {
 		t.Errorf("Response: %v", profileResponse.Body.String())
 	}
+
+	userCredentials = `{"email": "testing-user1@example.com", "password": "12345678Aa@", "is_end_user": true}`
 }
 
 func TestChangePasswordAPI(t *testing.T) {
 	// Login the user with given credentials and aquired the token
-	credentials := []byte(`{"email": "testing-user1@example.com", "password": "12345678Aa@"}`)
+	credentials := []byte(userCredentials)
 
 	authResponse, err := loginUser(credentials)
 	if err != nil {
