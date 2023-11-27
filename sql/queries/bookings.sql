@@ -11,10 +11,10 @@ RETURNING *;
 SELECT * FROM bookings WHERE id=$1;
 
 -- name: GetMedicalFacilityBookings :many
-SELECT * FROM bookings WHERE medical_facility_id=$1 AND status=$2;
+SELECT * FROM bookings WHERE medical_facility_id=$1 AND status=$2 LIMIT $3 OFFSET $4;
 
 -- name: GetUserBookings :many
-SELECT * FROM bookings WHERE user_id=$1 AND status=$2;
+SELECT * FROM bookings WHERE user_id=$1 AND status=$2 LIMIT $3 OFFSET $4;
 
 -- name: OverlappingUserBookings :many
 SELECT id FROM bookings WHERE (start_datetime, end_datetime) OVERLAPS ($1, $2) AND status='A' AND user_id=$3;
