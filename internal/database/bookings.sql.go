@@ -75,16 +75,23 @@ func (q *Queries) GetBooking(ctx context.Context, id uuid.UUID) (Booking, error)
 }
 
 const getMedicalFacilityBookings = `-- name: GetMedicalFacilityBookings :many
-SELECT id, created_at, modified_at, medical_facility_id, user_id, start_datetime, end_datetime, status FROM bookings WHERE medical_facility_id=$1 AND status=$2
+SELECT id, created_at, modified_at, medical_facility_id, user_id, start_datetime, end_datetime, status FROM bookings WHERE medical_facility_id=$1 AND status=$2 LIMIT $3 OFFSET $4
 `
 
 type GetMedicalFacilityBookingsParams struct {
 	MedicalFacilityID uuid.UUID
 	Status            BookingStatus
+	Limit             int32
+	Offset            int32
 }
 
 func (q *Queries) GetMedicalFacilityBookings(ctx context.Context, arg GetMedicalFacilityBookingsParams) ([]Booking, error) {
-	rows, err := q.db.QueryContext(ctx, getMedicalFacilityBookings, arg.MedicalFacilityID, arg.Status)
+	rows, err := q.db.QueryContext(ctx, getMedicalFacilityBookings,
+		arg.MedicalFacilityID,
+		arg.Status,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -116,16 +123,23 @@ func (q *Queries) GetMedicalFacilityBookings(ctx context.Context, arg GetMedical
 }
 
 const getUserBookings = `-- name: GetUserBookings :many
-SELECT id, created_at, modified_at, medical_facility_id, user_id, start_datetime, end_datetime, status FROM bookings WHERE user_id=$1 AND status=$2
+SELECT id, created_at, modified_at, medical_facility_id, user_id, start_datetime, end_datetime, status FROM bookings WHERE user_id=$1 AND status=$2 LIMIT $3 OFFSET $4
 `
 
 type GetUserBookingsParams struct {
 	UserID uuid.UUID
 	Status BookingStatus
+	Limit  int32
+	Offset int32
 }
 
 func (q *Queries) GetUserBookings(ctx context.Context, arg GetUserBookingsParams) ([]Booking, error) {
-	rows, err := q.db.QueryContext(ctx, getUserBookings, arg.UserID, arg.Status)
+	rows, err := q.db.QueryContext(ctx, getUserBookings,
+		arg.UserID,
+		arg.Status,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}

@@ -62,6 +62,7 @@ func GetRouter(isTest bool) *gin.Engine {
 	authResources.PATCH("/profile/", apiCfg.UpdateUserProfile)
 	authResources.DELETE("/profile/", apiCfg.DeleteUserProfile)
 	authResources.PUT("/change-password/", apiCfg.ChangePassword)
+	authResources.GET("/booking/", apiCfg.BookingList)
 	authResources.GET("/booking/:id/", apiCfg.GetBooking)
 
 	// Non end user resources
