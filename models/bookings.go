@@ -44,6 +44,15 @@ type bookingEndUser struct {
 	User          bookingUser            `json:"user"`
 }
 
+type bookingListing struct {
+	ID            uuid.UUID              `json:"id"`
+	CreatedAt     time.Time              `json:"created_at"`
+	ModifiedAt    time.Time              `json:"modified_at"`
+	StartDatetime time.Time              `json:"start_datetime"`
+	EndDatetime   time.Time              `json:"end_datetime"`
+	Status        database.BookingStatus `json:"status"`
+}
+
 func DatabaseBookingToBookingMedicalFacility(dbBooking database.Booking, dbMedicalFacility database.GetMedicalFacilityByIdRow) bookingFacility {
 	return bookingFacility{
 		ID:            dbBooking.ID,
@@ -79,4 +88,21 @@ func DatabaseBookingToBookingUser(dbBooking database.Booking, dbUser database.Us
 			Email: dbUser.Email,
 		},
 	}
+}
+
+func DatebaseBookingListingToBookingListing(dbBookingListing []database.Booking) []bookingListing {
+	var bookings []bookingListing
+
+	for _, booking := range dbBookingListing {
+		bookings = append(bookings, bookingListing{
+			ID:            booking.ID,
+			CreatedAt:     booking.CreatedAt,
+			ModifiedAt:    booking.ModifiedAt,
+			StartDatetime: booking.StartDatetime,
+			EndDatetime:   booking.EndDatetime,
+			Status:        booking.Status,
+		})
+	}
+
+	return bookings
 }

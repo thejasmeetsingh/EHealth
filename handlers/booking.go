@@ -7,8 +7,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/thejasmeetsingh/EHealth/emails"
 	"github.com/thejasmeetsingh/EHealth/internal/database"
 	"github.com/thejasmeetsingh/EHealth/models"
+	"github.com/thejasmeetsingh/EHealth/utils"
 )
 
 // API for creating booking record
@@ -76,6 +78,12 @@ func (apiCfg *ApiCfg) CreateBooking(c *gin.Context) {
 		return
 	}
 
+	_, err = emails.SendBookingCreationEmail(dbUser, dbBooking, *c.Request)
+	if err != nil {
+		ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	SuccessResponse(c, http.StatusOK, "Booking Created Successfully!", models.DatabaseBookingToBookingMedicalFacility(dbBooking, dbMedicalFacility))
 }
 
@@ -103,6 +111,7 @@ func (apiCfg *ApiCfg) GetBooking(c *gin.Context) {
 		return
 	}
 
+	// return booking detail response based on the user type
 	if dbUser.IsEndUser {
 		dbMedicalFacility, err := apiCfg.DB.GetMedicalFacilityById(c, dbBooking.MedicalFacilityID)
 		if err != nil {
@@ -116,4 +125,64 @@ func (apiCfg *ApiCfg) GetBooking(c *gin.Context) {
 		bookingResponse := models.DatabaseBookingToBookingUser(dbBooking, dbUser)
 		SuccessResponse(c, http.StatusOK, "", bookingResponse)
 	}
+}
+
+// API for fetching booking list
+func (apiCfg *ApiCfg) BookingList(c *gin.Context) {
+	dbUser, err := getDBUser(c)
+	if err != nil {
+		ErrorResponse(c, http.StatusForbidden, err.Error())
+		return
+	}
+
+	// Retrive booking status from query params
+	bookingStatus := c.Query("status")
+
+	if bookingStatus == "" {
+		ErrorResponse(c, http.StatusBadRequest, "status parameter is required")
+		return
+	}
+
+	// Check user type and return respected booking list response
+	if dbUser.IsEndUser {
+		bookings, err := apiCfg.DB.GetUserBookings(c, database.GetUserBookingsParams{
+			UserID: dbUser.ID,
+			Status: database.BookingStatus(bookingStatus),
+			Limit:  10,
+			Offset: utils.GetOffset(c),
+		})
+
+		if err != nil {
+			ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while fetching booking records: %v", err.Error()))
+			return
+		}
+
+		SuccessResponse(c, http.StatusOK, "", models.DatebaseBookingListingToBookingListing(bookings))
+	} else {
+		// Fetch medical facility object
+		dbMedicalFacility, err := apiCfg.getMedicalFacilityObject(c)
+
+		if err != nil {
+			ErrorResponse(c, http.StatusBadRequest, "Error while fetching facility details or facility does not exists")
+			return
+		}
+
+		bookings, err := apiCfg.DB.GetMedicalFacilityBookings(c, database.GetMedicalFacilityBookingsParams{
+			MedicalFacilityID: dbMedicalFacility.ID,
+			Status:            database.BookingStatus(bookingStatus),
+			Limit:             10,
+			Offset:            utils.GetOffset(c),
+		})
+
+		if err != nil {
+			ErrorResponse(c, http.StatusBadRequest, fmt.Sprintf("Error while fetching booking records: %v", err.Error()))
+			return
+		}
+
+		SuccessResponse(c, http.StatusOK, "", models.DatebaseBookingListingToBookingListing(bookings))
+	}
+}
+
+func (apiCfg *ApiCfg) UpdateBookingStatus(c *gin.Context) {
+
 }
