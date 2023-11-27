@@ -7,7 +7,7 @@ import (
 )
 
 func GetOffset(c *gin.Context) int32 {
-	offsetStr := c.Param("offset")
+	offsetStr := c.Query("offset")
 	if offsetStr == "" {
 		offsetStr = "0"
 	}

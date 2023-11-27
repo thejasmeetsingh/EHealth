@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/thejasmeetsingh/EHealth/emails"
 	"github.com/thejasmeetsingh/EHealth/internal/database"
 	"github.com/thejasmeetsingh/EHealth/models"
 	"github.com/thejasmeetsingh/EHealth/utils"
@@ -74,6 +75,12 @@ func (apiCfg *ApiCfg) CreateBooking(c *gin.Context) {
 
 	if err != nil {
 		ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while fetching medical facility details: %v", err.Error()))
+		return
+	}
+
+	_, err = emails.SendBookingCreationEmail(dbUser, dbBooking, *c.Request)
+	if err != nil {
+		ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -174,4 +181,8 @@ func (apiCfg *ApiCfg) BookingList(c *gin.Context) {
 
 		SuccessResponse(c, http.StatusOK, "", models.DatebaseBookingListingToBookingListing(bookings))
 	}
+}
+
+func (apiCfg *ApiCfg) UpdateBookingStatus(c *gin.Context) {
+
 }
