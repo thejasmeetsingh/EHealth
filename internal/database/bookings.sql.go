@@ -170,62 +170,71 @@ func (q *Queries) GetUserBookings(ctx context.Context, arg GetUserBookingsParams
 	return items, nil
 }
 
-const overlappingMedicalFacilityBookings = `-- name: OverlappingMedicalFacilityBookings :many
-SELECT id FROM bookings WHERE (start_datetime, end_datetime) OVERLAPS ($1, $2) AND status='A' AND medical_facility_id=$3
+const overlappingAcceptedBookingCount = `-- name: OverlappingAcceptedBookingCount :one
+SELECT COUNT(id) FROM bookings WHERE (start_datetime, end_datetime) OVERLAPS ($1, $2) AND status='A' AND medical_facility_id=$3
 `
 
-type OverlappingMedicalFacilityBookingsParams struct {
+type OverlappingAcceptedBookingCountParams struct {
 	Overlaps          interface{}
 	Overlaps_2        interface{}
 	MedicalFacilityID uuid.UUID
 }
 
-func (q *Queries) OverlappingMedicalFacilityBookings(ctx context.Context, arg OverlappingMedicalFacilityBookingsParams) ([]uuid.UUID, error) {
-	rows, err := q.db.QueryContext(ctx, overlappingMedicalFacilityBookings, arg.Overlaps, arg.Overlaps_2, arg.MedicalFacilityID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []uuid.UUID
-	for rows.Next() {
-		var id uuid.UUID
-		if err := rows.Scan(&id); err != nil {
-			return nil, err
-		}
-		items = append(items, id)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+func (q *Queries) OverlappingAcceptedBookingCount(ctx context.Context, arg OverlappingAcceptedBookingCountParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, overlappingAcceptedBookingCount, arg.Overlaps, arg.Overlaps_2, arg.MedicalFacilityID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
-const overlappingUserBookings = `-- name: OverlappingUserBookings :many
-SELECT id FROM bookings WHERE (start_datetime, end_datetime) OVERLAPS ($1, $2) AND status='A' AND user_id=$3
+const overlappingPendingBookings = `-- name: OverlappingPendingBookings :many
+SELECT b.id, b.start_datetime, b.end_datetime, mf.name, mf.address, u.email FROM bookings b 
+JOIN medical_facility mf ON b.medical_facility_id=mf.id
+JOIN users u ON b.user_id=u.id
+WHERE (b.start_datetime, b.end_datetime) OVERLAPS ($1, $2) AND status='P' AND b.medical_facility_id=$3 AND b.id!=$4
 `
 
-type OverlappingUserBookingsParams struct {
-	Overlaps   interface{}
-	Overlaps_2 interface{}
-	UserID     uuid.UUID
+type OverlappingPendingBookingsParams struct {
+	Overlaps          interface{}
+	Overlaps_2        interface{}
+	MedicalFacilityID uuid.UUID
+	ID                uuid.UUID
 }
 
-func (q *Queries) OverlappingUserBookings(ctx context.Context, arg OverlappingUserBookingsParams) ([]uuid.UUID, error) {
-	rows, err := q.db.QueryContext(ctx, overlappingUserBookings, arg.Overlaps, arg.Overlaps_2, arg.UserID)
+type OverlappingPendingBookingsRow struct {
+	ID            uuid.UUID
+	StartDatetime time.Time
+	EndDatetime   time.Time
+	Name          string
+	Address       string
+	Email         string
+}
+
+func (q *Queries) OverlappingPendingBookings(ctx context.Context, arg OverlappingPendingBookingsParams) ([]OverlappingPendingBookingsRow, error) {
+	rows, err := q.db.QueryContext(ctx, overlappingPendingBookings,
+		arg.Overlaps,
+		arg.Overlaps_2,
+		arg.MedicalFacilityID,
+		arg.ID,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []uuid.UUID
+	var items []OverlappingPendingBookingsRow
 	for rows.Next() {
-		var id uuid.UUID
-		if err := rows.Scan(&id); err != nil {
+		var i OverlappingPendingBookingsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.StartDatetime,
+			&i.EndDatetime,
+			&i.Name,
+			&i.Address,
+			&i.Email,
+		); err != nil {
 			return nil, err
 		}
-		items = append(items, id)
+		items = append(items, i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

@@ -16,8 +16,11 @@ SELECT * FROM bookings WHERE medical_facility_id=$1 AND status=$2 LIMIT $3 OFFSE
 -- name: GetUserBookings :many
 SELECT * FROM bookings WHERE user_id=$1 AND status=$2 LIMIT $3 OFFSET $4;
 
--- name: OverlappingUserBookings :many
-SELECT id FROM bookings WHERE (start_datetime, end_datetime) OVERLAPS ($1, $2) AND status='A' AND user_id=$3;
+-- name: OverlappingPendingBookings :many
+SELECT b.id, b.start_datetime, b.end_datetime, mf.name, mf.address, u.email FROM bookings b 
+JOIN medical_facility mf ON b.medical_facility_id=mf.id
+JOIN users u ON b.user_id=u.id
+WHERE (b.start_datetime, b.end_datetime) OVERLAPS ($1, $2) AND status='P' AND b.medical_facility_id=$3 AND b.id!=$4;
 
--- name: OverlappingMedicalFacilityBookings :many
-SELECT id FROM bookings WHERE (start_datetime, end_datetime) OVERLAPS ($1, $2) AND status='A' AND medical_facility_id=$3;
+-- name: OverlappingAcceptedBookingCount :one
+SELECT COUNT(id) FROM bookings WHERE (start_datetime, end_datetime) OVERLAPS ($1, $2) AND status='A' AND medical_facility_id=$3;

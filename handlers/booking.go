@@ -54,6 +54,23 @@ func (apiCfg *ApiCfg) CreateBooking(c *gin.Context) {
 		return
 	}
 
+	// Check if requested DateTime overlaps with any other accepted booking for the same medical facility
+	acceptedOverlappingBookingCount, err := apiCfg.DB.OverlappingAcceptedBookingCount(c, database.OverlappingAcceptedBookingCountParams{
+		Overlaps:          params.StartDateTime,
+		Overlaps_2:        params.EndDateTime,
+		MedicalFacilityID: medicalFacilityID,
+	})
+
+	if err != nil {
+		ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if acceptedOverlappingBookingCount > 0 {
+		ErrorResponse(c, http.StatusBadRequest, "This slot is already book. Please select other time")
+		return
+	}
+
 	// Create booking record
 	dbBooking, err := apiCfg.DB.CreateBooking(c, database.CreateBookingParams{
 		ID:                uuid.New(),
@@ -100,7 +117,7 @@ func (apiCfg *ApiCfg) GetBooking(c *gin.Context) {
 	bookingID, err := uuid.Parse(bookingIDStr)
 
 	if err != nil {
-		ErrorResponse(c, http.StatusBadRequest, "Invalid medical facility ID")
+		ErrorResponse(c, http.StatusBadRequest, "Invalid Booking ID")
 		return
 	}
 
@@ -183,6 +200,132 @@ func (apiCfg *ApiCfg) BookingList(c *gin.Context) {
 	}
 }
 
-func (apiCfg *ApiCfg) UpdateBookingStatus(c *gin.Context) {
+// Cancel multiple bookings and set their status to rejected
+func (apiCfg *ApiCfg) CancelBookings(c *gin.Context, bookings []database.OverlappingPendingBookingsRow) {
+	for _, booking := range bookings {
+		apiCfg.DB.UpdateBookingStatus(c, database.UpdateBookingStatusParams{
+			Status: database.BookingStatusR,
+			ID:     booking.ID,
+		})
 
+		go emails.SendBookingRejectedEmail(map[string]string{
+			"name":       booking.Name,
+			"address":    booking.Address,
+			"user_email": booking.Email,
+			"start_dt":   booking.StartDatetime.Format(time.RFC822),
+			"end_dt":     booking.EndDatetime.Format(time.RFC822),
+		}, *c.Request)
+	}
+}
+
+func (apiCfg *ApiCfg) UpdateBookingStatus(c *gin.Context) {
+	// Parse booking ID
+	bookingIDStr := c.Param("id")
+	bookingID, err := uuid.Parse(bookingIDStr)
+
+	if err != nil {
+		ErrorResponse(c, http.StatusBadRequest, "Invalid Booking ID")
+		return
+	}
+
+	// Fetch booking object
+	dbBooking, err := apiCfg.DB.GetBooking(c, bookingID)
+	if err != nil {
+		ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while fetching booking details: %v", err.Error()))
+		return
+	}
+
+	// parse booking status coming in request data
+	type Parameters struct {
+		Status string `json:"status"`
+	}
+	var params Parameters
+
+	if err = c.ShouldBindJSON(&params); err != nil {
+		ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Check if status is pending in the request data
+	if params.Status == string(database.BookingStatusP) {
+		ErrorResponse(c, http.StatusBadRequest, "Invalid booking status")
+		return
+	}
+
+	// Fetch user object
+	bookingUser, err := apiCfg.DB.GetUserById(c, dbBooking.UserID)
+	if err != nil {
+		ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while fetching booking user: %v", err.Error()))
+		return
+	}
+
+	// Fetch medical facility object
+	dbMedicalFacility, err := apiCfg.DB.GetMedicalFacilityById(c, dbBooking.MedicalFacilityID)
+	if err != nil {
+		ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while fetching booking medical facility: %v", err.Error()))
+		return
+	}
+
+	// Update the booking status
+	dbBooking, err = apiCfg.DB.UpdateBookingStatus(c, database.UpdateBookingStatusParams{
+		Status: database.BookingStatus(params.Status),
+		ID:     bookingID,
+	})
+
+	if err != nil {
+		ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while updating the booking status: %v", err.Error()))
+		return
+	}
+
+	// Check booking status
+	// if booking is accepted, then reject the overlapping pending bookings
+	// Otherwise send the booking rejected email to the user
+	if params.Status == string(database.BookingStatusA) {
+
+		// Fetch overlapping pending bookings, exlcuding the given booking
+		pendingOverlappingBookings, err := apiCfg.DB.OverlappingPendingBookings(c, database.OverlappingPendingBookingsParams{
+			MedicalFacilityID: dbBooking.MedicalFacilityID,
+			Overlaps:          dbBooking.StartDatetime,
+			Overlaps_2:        dbBooking.EndDatetime,
+			ID:                bookingID,
+		})
+
+		if err != nil {
+			ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		// Cancel the overlapping bookings which have status pending
+		go apiCfg.CancelBookings(c, pendingOverlappingBookings)
+
+		// Send booking accepted email to end user
+		_, err = emails.SendBookingAcceptedEmail(map[string]string{
+			"name":       string(dbMedicalFacility.Name),
+			"address":    dbMedicalFacility.Address,
+			"user_email": bookingUser.Email,
+			"start_dt":   dbBooking.StartDatetime.Format(time.RFC822),
+			"end_dt":     dbBooking.EndDatetime.Format(time.RFC822),
+		}, *c.Request)
+
+		if err != nil {
+			ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	} else {
+		// Send booking rejected email to end user
+		_, err = emails.SendBookingRejectedEmail(map[string]string{
+			"name":       string(dbMedicalFacility.Name),
+			"address":    dbMedicalFacility.Address,
+			"user_email": bookingUser.Email,
+			"start_dt":   dbBooking.StartDatetime.Format(time.RFC822),
+			"end_dt":     dbBooking.EndDatetime.Format(time.RFC822),
+		}, *c.Request)
+
+		if err != nil {
+			ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	SuccessResponse(c, http.StatusOK, "Booking status updated successfully!", models.DatabaseBookingToBookingUser(dbBooking, bookingUser))
 }
