@@ -327,5 +327,5 @@ func (apiCfg *ApiCfg) UpdateBookingStatus(c *gin.Context) {
 		}
 	}
 
-	SuccessResponse(c, http.StatusOK, "", models.DatabaseBookingToBookingUser(dbBooking, bookingUser))
+	SuccessResponse(c, http.StatusOK, "Booking status updated successfully!", models.DatabaseBookingToBookingUser(dbBooking, bookingUser))
 }
