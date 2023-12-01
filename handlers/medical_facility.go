@@ -41,6 +41,7 @@ func (apiCfg *ApiCfg) AddMedicalFacility(c *gin.Context) {
 	}
 
 	type Parameters struct {
+		ID           string  `json:"id"`
 		Type         string  `json:"type" binding:"required"`
 		Name         string  `json:"name" binding:"required"`
 		Description  string  `json:"description" binding:"required"`
@@ -71,9 +72,11 @@ func (apiCfg *ApiCfg) AddMedicalFacility(c *gin.Context) {
 		Valid:  true,
 	}
 
+	medicalFacilityID := uuid.New()
+
 	// Create medical facility record in the DB
 	_, err = apiCfg.DB.CreateMedicalFacility(c, database.CreateMedicalFacilityParams{
-		ID:            uuid.New(),
+		ID:            medicalFacilityID,
 		CreatedAt:     time.Now().UTC(),
 		ModifiedAt:    time.Now().UTC(),
 		Type:          database.FacilityType(params.Type),
@@ -93,6 +96,7 @@ func (apiCfg *ApiCfg) AddMedicalFacility(c *gin.Context) {
 		return
 	}
 
+	params.ID = medicalFacilityID.String()
 	SuccessResponse(c, http.StatusCreated, "Medical Facility Added Successfully!", params)
 }
 
