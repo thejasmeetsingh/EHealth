@@ -104,7 +104,7 @@ func (apiCfg *ApiCfg) CreateBooking(c *gin.Context) {
 		}
 	}
 
-	SuccessResponse(c, http.StatusOK, "Booking Created Successfully!", models.DatabaseBookingToBookingMedicalFacility(dbBooking, dbMedicalFacility))
+	SuccessResponse(c, http.StatusCreated, "Booking Created Successfully!", models.DatabaseBookingToBookingMedicalFacility(dbBooking, dbMedicalFacility))
 }
 
 // API for getting booking details based on booking ID

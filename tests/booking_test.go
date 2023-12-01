@@ -59,7 +59,7 @@ func TestBookingCreateAPI(t *testing.T) {
 	// call booking API and check response code
 	booking := getResponseRecorder(http.MethodPost, "/v1/booking/", authResponse.Data.Access, payload)
 
-	if booking.Code != http.StatusOK {
+	if booking.Code != http.StatusCreated {
 		t.Errorf("Response: %s", booking.Body.String())
 	}
 
@@ -72,4 +72,37 @@ func TestBookingCreateAPI(t *testing.T) {
 	}
 
 	BookingID = bookingResponse.Data.ID
+}
+
+func TestBookingListAPI(t *testing.T) {
+	// Login the user with given credentials and aquired the token
+	credentials := []byte(userCredentials)
+
+	authResponse, err := loginUser(credentials)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	response := getResponseRecorder(http.MethodGet, "/v1/booking/?status=P", authResponse.Data.Access, nil)
+
+	if response.Code != http.StatusOK {
+		t.Errorf("Response: %s", response.Body.String())
+	}
+}
+
+func TestBookingDetailAPI(t *testing.T) {
+	// Login the user with given credentials and aquired the token
+	credentials := []byte(userCredentials)
+
+	authResponse, err := loginUser(credentials)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	url := fmt.Sprintf("/v1/booking/%s/", BookingID)
+	response := getResponseRecorder(http.MethodGet, url, authResponse.Data.Access, nil)
+
+	if response.Code != http.StatusOK {
+		t.Errorf("Response: %s", response.Body.String())
+	}
 }
