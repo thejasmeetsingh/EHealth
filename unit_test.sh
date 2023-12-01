@@ -8,7 +8,7 @@ docker run --name test_db \
         --health-interval=10s \
         --health-timeout=5s \
         --health-retries=5 \
-        -d postgis/postgis`
+        -d postgis/postgis
 
 echo "Waiting for DB..."
 
