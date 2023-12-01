@@ -204,24 +204,32 @@ func (apiCfg *ApiCfg) BookingList(c *gin.Context) {
 }
 
 // Cancel multiple bookings and set their status to rejected
-func (apiCfg *ApiCfg) CancelBookings(c *gin.Context, bookings []database.OverlappingPendingBookingsRow) {
+func (apiCfg *ApiCfg) CancelBookings(c *gin.Context, bookings []database.OverlappingPendingBookingsRow, isTest bool) {
 	for _, booking := range bookings {
 		apiCfg.DB.UpdateBookingStatus(c, database.UpdateBookingStatusParams{
 			Status: database.BookingStatusR,
 			ID:     booking.ID,
 		})
 
-		go emails.SendBookingRejectedEmail(map[string]string{
-			"name":       booking.Name,
-			"address":    booking.Address,
-			"user_email": booking.Email,
-			"start_dt":   booking.StartDatetime.Format(time.RFC822),
-			"end_dt":     booking.EndDatetime.Format(time.RFC822),
-		}, *c.Request)
+		if !isTest {
+			go emails.SendBookingRejectedEmail(map[string]string{
+				"name":       booking.Name,
+				"address":    booking.Address,
+				"user_email": booking.Email,
+				"start_dt":   booking.StartDatetime.Format(time.RFC822),
+				"end_dt":     booking.EndDatetime.Format(time.RFC822),
+			}, *c.Request)
+		}
 	}
 }
 
 func (apiCfg *ApiCfg) UpdateBookingStatus(c *gin.Context) {
+	dbUser, err := getDBUser(c)
+	if err != nil {
+		ErrorResponse(c, http.StatusForbidden, err.Error())
+		return
+	}
+
 	// Parse booking ID
 	bookingIDStr := c.Param("id")
 	bookingID, err := uuid.Parse(bookingIDStr)
@@ -240,7 +248,8 @@ func (apiCfg *ApiCfg) UpdateBookingStatus(c *gin.Context) {
 
 	// parse booking status coming in request data
 	type Parameters struct {
-		Status string `json:"status"`
+		Status string `json:"status" binding:"required"`
+		IsTest bool   `json:"is_test"`
 	}
 	var params Parameters
 
@@ -266,6 +275,11 @@ func (apiCfg *ApiCfg) UpdateBookingStatus(c *gin.Context) {
 	dbMedicalFacility, err := apiCfg.DB.GetMedicalFacilityById(c, dbBooking.MedicalFacilityID)
 	if err != nil {
 		ErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("Error while fetching booking medical facility: %v", err.Error()))
+		return
+	}
+
+	if dbUser.ID != dbMedicalFacility.UserID {
+		ErrorResponse(c, http.StatusForbidden, "You cannot access this resource")
 		return
 	}
 
@@ -299,34 +313,38 @@ func (apiCfg *ApiCfg) UpdateBookingStatus(c *gin.Context) {
 		}
 
 		// Cancel the overlapping bookings which have status pending
-		go apiCfg.CancelBookings(c, pendingOverlappingBookings)
+		go apiCfg.CancelBookings(c, pendingOverlappingBookings, params.IsTest)
 
-		// Send booking accepted email to end user
-		_, err = emails.SendBookingAcceptedEmail(map[string]string{
-			"name":       string(dbMedicalFacility.Name),
-			"address":    dbMedicalFacility.Address,
-			"user_email": bookingUser.Email,
-			"start_dt":   dbBooking.StartDatetime.Format(time.RFC822),
-			"end_dt":     dbBooking.EndDatetime.Format(time.RFC822),
-		}, *c.Request)
+		if !params.IsTest {
+			// Send booking accepted email to end user
+			_, err = emails.SendBookingAcceptedEmail(map[string]string{
+				"name":       string(dbMedicalFacility.Name),
+				"address":    dbMedicalFacility.Address,
+				"user_email": bookingUser.Email,
+				"start_dt":   dbBooking.StartDatetime.Format(time.RFC822),
+				"end_dt":     dbBooking.EndDatetime.Format(time.RFC822),
+			}, *c.Request)
 
-		if err != nil {
-			ErrorResponse(c, http.StatusInternalServerError, err.Error())
-			return
+			if err != nil {
+				ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				return
+			}
 		}
 	} else {
-		// Send booking rejected email to end user
-		_, err = emails.SendBookingRejectedEmail(map[string]string{
-			"name":       string(dbMedicalFacility.Name),
-			"address":    dbMedicalFacility.Address,
-			"user_email": bookingUser.Email,
-			"start_dt":   dbBooking.StartDatetime.Format(time.RFC822),
-			"end_dt":     dbBooking.EndDatetime.Format(time.RFC822),
-		}, *c.Request)
+		if !params.IsTest {
+			// Send booking rejected email to end user
+			_, err = emails.SendBookingRejectedEmail(map[string]string{
+				"name":       string(dbMedicalFacility.Name),
+				"address":    dbMedicalFacility.Address,
+				"user_email": bookingUser.Email,
+				"start_dt":   dbBooking.StartDatetime.Format(time.RFC822),
+				"end_dt":     dbBooking.EndDatetime.Format(time.RFC822),
+			}, *c.Request)
 
-		if err != nil {
-			ErrorResponse(c, http.StatusInternalServerError, err.Error())
-			return
+			if err != nil {
+				ErrorResponse(c, http.StatusInternalServerError, err.Error())
+				return
+			}
 		}
 	}
 

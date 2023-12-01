@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/thejasmeetsingh/EHealth/internal/database"
 )
 
 var BookingID string
@@ -101,6 +103,25 @@ func TestBookingDetailAPI(t *testing.T) {
 
 	url := fmt.Sprintf("/v1/booking/%s/", BookingID)
 	response := getResponseRecorder(http.MethodGet, url, authResponse.Data.Access, nil)
+
+	if response.Code != http.StatusOK {
+		t.Errorf("Response: %s", response.Body.String())
+	}
+}
+
+func TestBookingUpdateAPI(t *testing.T) {
+	// Login the user with given credentials and aquired the token
+	credentials := []byte(`{"email": "testing-doc1@example.com", "password": "12345678Aa@"}`)
+
+	authResponse, err := loginUser(credentials)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	url := fmt.Sprintf("/v1/booking/%s/", BookingID)
+	payload := []byte(fmt.Sprintf(`{"status": "%s", "is_test": true}`, database.BookingStatusA))
+
+	response := getResponseRecorder(http.MethodPatch, url, authResponse.Data.Access, payload)
 
 	if response.Code != http.StatusOK {
 		t.Errorf("Response: %s", response.Body.String())
