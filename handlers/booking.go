@@ -72,6 +72,17 @@ func (apiCfg *ApiCfg) CreateBooking(c *gin.Context) {
 		return
 	}
 
+	medicalFacilityTimings, err := apiCfg.DB.GetMedicalFacilityTimingDetails(c, medicalFacilityID)
+	if err != nil {
+		ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if !utils.IsBookingTimeInRange(medicalFacilityTimings, params.StartDateTime, params.EndDateTime) {
+		ErrorResponse(c, http.StatusBadRequest, "No booking slot available at this time. Please select other time")
+		return
+	}
+
 	// Create booking record
 	dbBooking, err := apiCfg.DB.CreateBooking(c, database.CreateBookingParams{
 		ID:                uuid.New(),
