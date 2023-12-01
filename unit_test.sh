@@ -1,5 +1,5 @@
 # Run the testing database container
-docker run --name test_db \
+`docker run --name test_db \
         -e POSTGRES_USER=test_db_user \
         -e POSTGRES_PASSWORD=1234 \
         -e POSTGRES_DB=ehealth_test_db \
@@ -8,7 +8,7 @@ docker run --name test_db \
         --health-interval=10s \
         --health-timeout=5s \
         --health-retries=5 \
-        -d postgis/postgis
+        -d postgis/postgis`
 
 echo "Waiting for DB..."
 

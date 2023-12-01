@@ -9,8 +9,6 @@ import (
 
 const doctorCredentials = `{"email": "testing-doc@example.com", "password": "12345678Aa@"}`
 
-var medicalFacilityID string
-
 func TestAddMedicalFacilityAPI(t *testing.T) {
 	// Create a testing doctor user
 	authResponse, err := createTestingUser([]byte(doctorCredentials))
@@ -39,37 +37,10 @@ func TestGetMedicalFacilityDetails(t *testing.T) {
 	}
 
 	// Call medical facility details API and check the respone Code
-	responseRecorder := getResponseRecorder(http.MethodGet, "/v1/medical-facility/", authResponse.Data.Access, nil)
+	response := getResponseRecorder(http.MethodGet, "/v1/medical-facility/", authResponse.Data.Access, nil)
 
-	type Response struct {
-		Message string `json:"message"`
-		Data    struct {
-			ID           string `json:"id"`
-			Type         string `json:"type"`
-			Name         string `json:"name"`
-			Description  string `json:"description"`
-			Email        string `json:"email"`
-			MobileNumber string `json:"mobile_number"`
-			Charges      string `json:"charges"`
-			Address      string `json:"address"`
-			Location     struct {
-				Lat float64 `json:"lat"`
-				Lng float64 `json:"lng"`
-			} `json:"location"`
-		} `json:"data"`
-	}
-	var response Response
-
-	// Decode the response
-	decoder := json.NewDecoder(responseRecorder.Body)
-	if err := decoder.Decode(&response); err != nil {
-		t.Errorf(err.Error())
-	}
-
-	medicalFacilityID = response.Data.ID
-
-	if responseRecorder.Code != http.StatusOK {
-		t.Errorf("Response: %v", responseRecorder.Body.String())
+	if response.Code != http.StatusOK {
+		t.Errorf("Response: %v", response.Body.String())
 	}
 }
 

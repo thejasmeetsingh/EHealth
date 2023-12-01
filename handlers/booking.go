@@ -25,6 +25,7 @@ func (apiCfg *ApiCfg) CreateBooking(c *gin.Context) {
 		MedicalFacilityID string    `json:"medical_facility_id" binding:"required"`
 		StartDateTime     time.Time `json:"start_datetime" binding:"required"`
 		EndDateTime       time.Time `json:"end_datetime" binding:"required"`
+		IsTest            bool      `json:"is_test"`
 	}
 
 	var params Parameters
@@ -95,10 +96,12 @@ func (apiCfg *ApiCfg) CreateBooking(c *gin.Context) {
 		return
 	}
 
-	_, err = emails.SendBookingCreationEmail(dbUser, dbBooking, *c.Request)
-	if err != nil {
-		ErrorResponse(c, http.StatusInternalServerError, err.Error())
-		return
+	if !params.IsTest {
+		_, err = emails.SendBookingCreationEmail(dbUser, dbBooking, *c.Request)
+		if err != nil {
+			ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 
 	SuccessResponse(c, http.StatusOK, "Booking Created Successfully!", models.DatabaseBookingToBookingMedicalFacility(dbBooking, dbMedicalFacility))
