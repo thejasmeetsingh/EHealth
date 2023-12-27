@@ -29,7 +29,8 @@ It is an online booking management system where hospitals, clinics, or individua
     ```
     You can set the respected values as per your need
 - And finally run `docker-compose up` and that's it!
-- You can use this Postman Collection for using/testing the APIs: [Link](https://api.postman.com/collections/17396704-2cebc0d3-fcb4-4475-94b6-d2a59361463d?access_key=PMAT-01HDNGX7D80B3B81107SB6H9MZ)
+
+[<img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;">](https://god.gw.postman.com/run-collection/17396704-2cebc0d3-fcb4-4475-94b6-d2a59361463d?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D17396704-2cebc0d3-fcb4-4475-94b6-d2a59361463d%26entityType%3Dcollection%26workspaceId%3D392b781a-05ab-415b-9eb8-456aca6f3129)
 
 ## TODO
 - [x] User management
